@@ -12,9 +12,7 @@
 
 /** @typedef {import('./index.js').ParseResult} ParseResult */
 
-// ---------------------------------------------------------------------------
 // Patterns
-// ---------------------------------------------------------------------------
 
 const IMPORT_STATIC_RE  = /^\s*import\s+.*?\s+from\s+['"`]([^'"`]+)['"`]/;
 const IMPORT_DYNAMIC_RE = /import\s*\(\s*['"`]([^'"`]+)['"`]\s*\)/g;
@@ -31,17 +29,13 @@ const METHOD_RE         = /^\s*(?:async\s+)?(?:static\s+)?([A-Za-z_$][A-Za-z0-9_
 
 const CLASS_RE          = /^\s*(?:export\s+)?class\s+([A-Za-z_$][A-Za-z0-9_$]*)/;
 
-// ---------------------------------------------------------------------------
 // Helpers
-// ---------------------------------------------------------------------------
 
 function trimParams(raw) {
   return raw.split(',').map(p => p.trim()).filter(Boolean);
 }
 
-// ---------------------------------------------------------------------------
 // Parser
-// ---------------------------------------------------------------------------
 
 export class JavaScriptParser {
   get language() { return 'javascript'; }

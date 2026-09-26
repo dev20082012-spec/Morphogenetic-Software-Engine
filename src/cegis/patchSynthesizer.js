@@ -27,9 +27,7 @@
 
 import { safeGet, ensure } from '../security/errors.js';
 
-// ---------------------------------------------------------------------------
 // Tier 1: Structural patches (evidence-anchored)
-// ---------------------------------------------------------------------------
 
 /**
  * @typedef {{
@@ -63,9 +61,7 @@ function buildDiff(targetFile, removedLines, addedLines, lineHint = 1) {
   return `--- a/${targetFile}\n+++ b/${targetFile}\n@@ -${lineHint},${removed.split('\n').length} +${lineHint},${added.split('\n').length} @@\n${removed}\n${added}`;
 }
 
-// ---------------------------------------------------------------------------
 // Type-specific patch strategies
-// ---------------------------------------------------------------------------
 
 /**
  * SECURITY: insert an auth-guard before the mutating async operation.
@@ -281,9 +277,7 @@ function patchDrift(v) {
   };
 }
 
-// ---------------------------------------------------------------------------
 // Public entry point
-// ---------------------------------------------------------------------------
 
 /**
  * Synthesize the minimal patch for a violation record.

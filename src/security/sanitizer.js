@@ -135,7 +135,7 @@ export function isHighEntropySecret(token) {
 }
 
 /**
- * Files that must NEVER be ingested — replace contents with static stubs.
+ * Files that must NEVER be ingested  -  replace contents with static stubs.
  * Pattern list per IBM Cloud Security Policy §3.1 (Secret File Exclusion).
  *
  * @param {string} filePath
@@ -185,7 +185,7 @@ export function checkHardExcludedFile(filePath) {
  */
 
 /**
- * Build a redaction event record. The raw credential value is NEVER stored —
+ * Build a redaction event record. The raw credential value is NEVER stored  - 
  * only a truncated SHA-256 hash (first 12 hex chars) for audit matching.
  *
  * @param {string} filePath
@@ -235,9 +235,9 @@ function estimateLine(source, matchIndex) {
  * Sanitize a single file's content before agent ingestion.
  *
  * Operates in three passes:
- *   Pass 1 — Hard-exclude check (entire file stub replacement)
- *   Pass 2 — Regex pattern sweep (category A–D + generic key patterns)
- *   Pass 3 — Entropy sweep on quoted/assigned string literals
+ *   Pass 1  -  Hard-exclude check (entire file stub replacement)
+ *   Pass 2  -  Regex pattern sweep (category A–D + generic key patterns)
+ *   Pass 3  -  Entropy sweep on quoted/assigned string literals
  *
  * @param {string} content   - Raw file content
  * @param {string} filePath  - Absolute or relative path (for logging)

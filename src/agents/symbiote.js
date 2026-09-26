@@ -30,9 +30,7 @@ import {
 import { safeTest, safeMatchAll, createSafeRegExp, escapeRegExp } from '../security/redos.js';
 import { trySync, safeGet } from '../security/errors.js';
 
-// ---------------------------------------------------------------------------
 // Security constants
-// ---------------------------------------------------------------------------
 
 /** Maximum bytes read from any single doc or source file (4 MB). */
 const MAX_DOC_BYTES = 4 * 1024 * 1024;
@@ -43,9 +41,7 @@ const MAX_WALK_DEPTH = 32;
 /** Maximum total files collected per run. */
 const MAX_FILES = 5_000;
 
-// ---------------------------------------------------------------------------
 // Supported file extensions
-// ---------------------------------------------------------------------------
 
 const MARKDOWN_EXT = new Set(['.md', '.mdx', '.txt', '.rst']);
 const OPENAPI_EXT  = new Set(['.yaml', '.yml', '.json']);
@@ -55,9 +51,7 @@ const IGNORED_DIRS = new Set([
   '__pycache__', 'vendor', '.next', '.nuxt',
 ]);
 
-// ---------------------------------------------------------------------------
 // Claim extraction: Markdown / prose documents
-// ---------------------------------------------------------------------------
 
 /**
  * Patterns for extracting concrete behavioral claims from prose text.
@@ -155,9 +149,7 @@ function parseMarkdownClaims(source, filePath) {
   };
 }
 
-// ---------------------------------------------------------------------------
 // Claim extraction: OpenAPI / Swagger YAML+JSON
-// ---------------------------------------------------------------------------
 
 /**
  * Minimal line-by-line YAML/JSON key-value extractor.
@@ -340,9 +332,7 @@ function parseOpenAPIClaims(source, filePath) {
   };
 }
 
-// ---------------------------------------------------------------------------
 // Code-side claim extractor (for cross-reference)
-// ---------------------------------------------------------------------------
 
 /**
  * Extract behavioral claims directly from source code files so the drift engine
@@ -401,9 +391,7 @@ export function extractCodeClaims(source, filePath) {
   };
 }
 
-// ---------------------------------------------------------------------------
 // Directory traversal
-// ---------------------------------------------------------------------------
 
 /**
  * Collect all documentation and source files under rootDir.
@@ -463,9 +451,7 @@ function tryWithinRoot(root, target) {
   }
 }
 
-// ---------------------------------------------------------------------------
 // Main Symbiote entry point
-// ---------------------------------------------------------------------------
 
 /**
  * Run the Symbiote document understanding engine over a repository root.
@@ -592,9 +578,7 @@ function buildAggregated(proseClaims, openApiClaims) {
   };
 }
 
-// ---------------------------------------------------------------------------
 // CLI entry point
-// ---------------------------------------------------------------------------
 
 if (process.argv[1] && path.basename(process.argv[1]) === 'symbiote.js') {
   const targetDir  = process.argv[2] || process.cwd();

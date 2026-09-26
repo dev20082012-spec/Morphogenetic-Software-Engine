@@ -17,9 +17,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-// ---------------------------------------------------------------------------
 // Counterexample synthesis templates
-// ---------------------------------------------------------------------------
 
 /**
  * Template library for synthesizing adversarial test cases per invariant type.
@@ -244,9 +242,7 @@ describe('${inv.id} -- ${inv.name}', () => {
   },
 };
 
-// ---------------------------------------------------------------------------
 // Patch generation
-// ---------------------------------------------------------------------------
 
 /**
  * Generate a descriptive patch record for restoring an invariant.
@@ -307,9 +303,7 @@ function generatePatch(inv) {
   };
 }
 
-// ---------------------------------------------------------------------------
 // CEGIS main loop
-// ---------------------------------------------------------------------------
 
 /**
  * @typedef {{

@@ -14,9 +14,7 @@ import path from 'node:path';
 import { assertWithinRoot, tryWithinRoot, collectFilesSafe, isSafeFilename } from '../security/pathguard.js';
 import { trySync, safeGet } from '../security/errors.js';
 
-// ---------------------------------------------------------------------------
 // Documentation extraction
-// ---------------------------------------------------------------------------
 
 /**
  * Extract all section headings and code-fenced symbol names from a markdown file.
@@ -69,9 +67,7 @@ function collectDocFiles(rootDir) {
   return files;
 }
 
-// ---------------------------------------------------------------------------
 // OpenAPI path extraction
-// ---------------------------------------------------------------------------
 
 /**
  * Extract HTTP paths from an OpenAPI-style JSON or YAML doc (text-only, no full parser).
@@ -88,9 +84,7 @@ function extractOpenAPIPaths(source) {
   return [...new Set(paths)];
 }
 
-// ---------------------------------------------------------------------------
 // Drift detection
-// ---------------------------------------------------------------------------
 
 /**
  * @typedef {{

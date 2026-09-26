@@ -1,4 +1,4 @@
-# Project MSE — Web Dashboard UI 🧬
+# Project MSE  -  Web Dashboard UI 
 
 [![React: 19](https://img.shields.io/badge/React-19.2-blue?style=for-the-badge&logo=react)](https://react.dev)
 [![Vite: 8](https://img.shields.io/badge/Vite-8.3-purple?style=for-the-badge&logo=vite)](https://vite.dev)
@@ -11,7 +11,7 @@ Built with **React 19** and **Vite 8**, this single-page dashboard provides real
 
 ---
 
-## 🌟 Dashboard Capabilities
+##  Dashboard Capabilities
 
 | View | Subagent | Description |
 |---|---|---|
@@ -23,7 +23,7 @@ Built with **React 19** and **Vite 8**, this single-page dashboard provides real
 
 ---
 
-## 🚀 Deployment to Vercel
+##  Deployment to Vercel
 
 This dashboard is ready to deploy directly on **Vercel** with zero extra configuration.
 
@@ -58,7 +58,7 @@ If deploying from the repository root:
 
 ---
 
-## 💻 Local Development
+##  Local Development
 
 ### Prerequisites
 - **Node.js**: `>= 18.0.0` (Recommended: Node 20 or 24)
@@ -93,7 +93,7 @@ npm run preview   # Previews production bundle
 
 ---
 
-## 🎨 Design System & Aesthetics
+##  Design System & Aesthetics
 
 - **Color System**: Dark-mode palette optimized for low eye fatigue with curated HSL accent colors:
   - Background: Deep Obsidian (`#0f172a`, `#090d16`)
@@ -106,6 +106,6 @@ npm run preview   # Previews production bundle
 
 ---
 
-## 📄 License
+##  License
 
 Licensed under the [MIT License](../LICENSE).

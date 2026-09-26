@@ -20,9 +20,7 @@ import {
 import { safeTest } from '../security/redos.js';
 import { trySync, safeGet } from '../security/errors.js';
 
-// ---------------------------------------------------------------------------
 // Security constants
-// ---------------------------------------------------------------------------
 
 /** Maximum bytes read from a single source file (10 MB). */
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
@@ -33,9 +31,7 @@ const MAX_WALK_DEPTH = 32;
 /** Maximum number of source files processed in one run. */
 const MAX_FILES = 10_000;
 
-// ---------------------------------------------------------------------------
 // Language-specific AST node classifiers (pre-compiled, validated safe)
-// ---------------------------------------------------------------------------
 
 const ASYNC_BOUNDARY_PATTERNS = [
   /\bawait\b/,
@@ -90,9 +86,7 @@ const ROUTE_PATTERNS = [
   /path:\s*['"`]\//,
 ];
 
-// ---------------------------------------------------------------------------
 // File system traversal
-// ---------------------------------------------------------------------------
 
 const IGNORED_DIRS = new Set([
   'node_modules', '.git', '.next', '.nuxt', 'dist', 'build',
@@ -123,9 +117,7 @@ function collectSourceFiles(rootDir) {
   return results;
 }
 
-// ---------------------------------------------------------------------------
 // Pattern matching helpers
-// ---------------------------------------------------------------------------
 
 /**
  * Scan a set of lines with a pattern array; return matching line numbers and excerpts.
@@ -197,9 +189,7 @@ function extractDependencies(lines, filePath, rootDir) {
   return [...new Set(deps)];
 }
 
-// ---------------------------------------------------------------------------
 // Per-file analysis
-// ---------------------------------------------------------------------------
 
 /**
  * Analyse a single source file and return its topology record.
@@ -273,9 +263,7 @@ function extractRouteMethod(excerpt) {
   return m ? (m[1] || m[2]).toUpperCase() : 'UNKNOWN';
 }
 
-// ---------------------------------------------------------------------------
 // Invariant extraction
-// ---------------------------------------------------------------------------
 
 /**
  * Derive systemic invariants from the full topology.
@@ -391,9 +379,7 @@ function extractSystemInvariants(topologies) {
   return invariants;
 }
 
-// ---------------------------------------------------------------------------
 // Graph construction
-// ---------------------------------------------------------------------------
 
 /**
  * Build a directed dependency graph (adjacency list) from file topologies.
@@ -410,9 +396,7 @@ function buildDependencyGraph(topologies) {
   return graph;
 }
 
-// ---------------------------------------------------------------------------
 // Main orchestration
-// ---------------------------------------------------------------------------
 
 /**
  * Run the Morphologist over a repository root.
@@ -471,9 +455,7 @@ export function runMorphologist(rootDir, outputPath) {
   return report;
 }
 
-// ---------------------------------------------------------------------------
 // CLI entry point
-// ---------------------------------------------------------------------------
 
 if (process.argv[1] && path.basename(process.argv[1]) === 'morphologist.js') {
   const targetDir = process.argv[2] || process.cwd();

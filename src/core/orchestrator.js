@@ -56,10 +56,8 @@ export class Orchestrator {
   async run() {
     this.bus.emitSync({ phase: 'ORCHESTRATOR', status: 'running', payload: { rootDir: this.rootDir } });
 
-    // -------------------------------------------------------------------
-    // Phase 1: Morphologist (Alpha) -- AST topology
-    // -------------------------------------------------------------------
-    this.bus.emitSync({ phase: 'ALPHA', status: 'running' });
+        // Phase 1: Morphologist (Alpha) -- AST topology
+        this.bus.emitSync({ phase: 'ALPHA', status: 'running' });
     let morphReport;
     try {
       const outputFile = path.join(this.outputDir, 'discovered_invariants.json');
@@ -76,10 +74,8 @@ export class Orchestrator {
       throw err;
     }
 
-    // -------------------------------------------------------------------
-    // Phase 2: Symbiote (Beta) -- document understanding + drift engine
-    // -------------------------------------------------------------------
-    this.bus.emitSync({ phase: 'BETA', status: 'running' });
+        // Phase 2: Symbiote (Beta) -- document understanding + drift engine
+        this.bus.emitSync({ phase: 'BETA', status: 'running' });
     let driftReport;
     try {
       const symbioteOutputFile = path.join(this.outputDir, 'symbiote_report.json');
@@ -127,10 +123,8 @@ export class Orchestrator {
       driftReport = null;
     }
 
-    // -------------------------------------------------------------------
-    // Phase 3: Immune Core (Gamma) -- CEGIS synthesis
-    // -------------------------------------------------------------------
-    this.bus.emitSync({ phase: 'GAMMA', status: 'running' });
+        // Phase 3: Immune Core (Gamma) -- CEGIS synthesis
+        this.bus.emitSync({ phase: 'GAMMA', status: 'running' });
     try {
       const violations = [
         ...(safeGet(morphReport, 'discoveredInvariants', [])),

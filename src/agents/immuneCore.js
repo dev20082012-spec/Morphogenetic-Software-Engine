@@ -33,9 +33,7 @@ import {
 } from '../security/sandbox.js';
 import { trySync, safeGet, ensure } from '../security/errors.js';
 
-// ---------------------------------------------------------------------------
 // Violation record normalisation
-// ---------------------------------------------------------------------------
 
 /**
  * @typedef {{
@@ -102,9 +100,7 @@ function inferTypeFromLog(log) {
   return 'CORRECTNESS';
 }
 
-// ---------------------------------------------------------------------------
 // Antigen (adversarial test) synthesis
-// ---------------------------------------------------------------------------
 
 /**
  * Synthesize the minimal failing test for a given violation.
@@ -319,9 +315,7 @@ describe('${id} -- ${name.replace(/'/g, "\\'")}', () => {
 `;
 }
 
-// ---------------------------------------------------------------------------
 // Isolated test harness
-// ---------------------------------------------------------------------------
 
 /**
  * Write the antigen source to a temp file and execute it via vitest --run.
@@ -396,9 +390,7 @@ process.exit(failed ? 1 : 0);
   }
 }
 
-// ---------------------------------------------------------------------------
 // Benchmark helper
-// ---------------------------------------------------------------------------
 
 /**
  * Measure the ops/sec throughput of a parameterless function.
@@ -414,9 +406,7 @@ function benchmark(fn) {
   return ops * 20; // scale to ops/sec (50ms window * 20 = 1000ms)
 }
 
-// ---------------------------------------------------------------------------
 // Main CEGIS loop
-// ---------------------------------------------------------------------------
 
 /**
  * @typedef {{

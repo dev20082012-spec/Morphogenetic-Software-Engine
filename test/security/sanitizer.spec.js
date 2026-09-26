@@ -1,7 +1,7 @@
 /**
  * test/security/sanitizer.spec.js
  *
- * Compliance Verification Suite — Pre-Flight Secret Redaction Engine
+ * Compliance Verification Suite  -  Pre-Flight Secret Redaction Engine
  *
  * Asserts that ALL known secret patterns and .env payloads are 100% neutralized
  * without breaking AST-parseable code structure.
@@ -14,12 +14,12 @@
  *   S5. JWT Bearer tokens
  *   S6. Stripe API keys
  *   S7. GitHub personal access tokens
- *   S8. Database DSN (Postgres, MongoDB, Redis, MySQL) — schema preservation
+ *   S8. Database DSN (Postgres, MongoDB, Redis, MySQL)  -  schema preservation
  *   S9. Generic API keys / hard-coded passwords
  *   S10. Shannon entropy detector
  *   S11. Hard-excluded file stubs (.env, credentials.json, *.pem)
  *   S12. AST payload sanitization
- *   S13. Negative cases — legitimate code strings not redacted
+ *   S13. Negative cases  -  legitimate code strings not redacted
  *   S14. Compliance audit report generation
  */
 
@@ -222,7 +222,7 @@ describe('S7. GitHub personal access tokens', () => {
 });
 
 // ---------------------------------------------------------------------------
-// S8. Database DSN — schema preservation
+// S8. Database DSN  -  schema preservation
 // ---------------------------------------------------------------------------
 
 describe('S8. Database connection strings (schema preserved)', () => {
@@ -426,10 +426,10 @@ describe('S12. AST payload sanitization', () => {
 });
 
 // ---------------------------------------------------------------------------
-// S13. Negative cases — legitimate code strings must NOT be redacted
+// S13. Negative cases  -  legitimate code strings must NOT be redacted
 // ---------------------------------------------------------------------------
 
-describe('S13. Negative cases — legitimate code not redacted', () => {
+describe('S13. Negative cases  -  legitimate code not redacted', () => {
   it('S13-a. plain function identifier is preserved', () => {
     const input = 'function getUserById(id) { return db.query(id); }';
     const { content, redacted } = sanitizeCodebaseFile(input, 'user.js');

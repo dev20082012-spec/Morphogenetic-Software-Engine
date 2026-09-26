@@ -31,9 +31,7 @@ import { assertWithinRoot, tryWithinRoot, atomicWriteSync } from '../security/pa
 import { safeTest, createWordBoundaryRegExp, escapeRegExp } from '../security/redos.js';
 import { trySync, safeGet } from '../security/errors.js';
 
-// ---------------------------------------------------------------------------
 // Normalisation helpers
-// ---------------------------------------------------------------------------
 
 /** Normalise an auth scheme string for comparison. */
 function normaliseAuth(raw) {
@@ -62,9 +60,7 @@ function normalisePath(raw) {
     .toLowerCase();
 }
 
-// ---------------------------------------------------------------------------
 // Severity assignment
-// ---------------------------------------------------------------------------
 
 /**
  * @typedef {'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'} Severity
@@ -83,9 +79,7 @@ const KIND_SEVERITY = {
   SYMBOL_PHANTOM:        'LOW',
 };
 
-// ---------------------------------------------------------------------------
 // D_intent score computation
-// ---------------------------------------------------------------------------
 
 /** Severity weights for D_intent calculation. */
 const SEVERITY_WEIGHT = { CRITICAL: 1.0, HIGH: 0.6, MEDIUM: 0.3, LOW: 0.1 };
@@ -104,9 +98,7 @@ function computeDintent(records, totalClaimSurfaces) {
   return parseFloat(Math.min(raw / totalClaimSurfaces, 1).toFixed(6));
 }
 
-// ---------------------------------------------------------------------------
 // Drift record typedef
-// ---------------------------------------------------------------------------
 
 /**
  * @typedef {{
@@ -147,9 +139,7 @@ function computeDintent(records, totalClaimSurfaces) {
  * }} PatchRecord
  */
 
-// ---------------------------------------------------------------------------
 // Core comparators
-// ---------------------------------------------------------------------------
 
 let _idSeq = 0;
 function nextId(kind) {
@@ -416,9 +406,7 @@ function compareSymbols(docSymbols, codeExports, docFile, codeFile) {
   return records;
 }
 
-// ---------------------------------------------------------------------------
 // Auto-patcher
-// ---------------------------------------------------------------------------
 
 /**
  * Locate the first occurrence of `oldValue` in `fileContent` as a standalone
@@ -543,9 +531,7 @@ function runAutoPatcher(records, rootDir) {
   return patches;
 }
 
-// ---------------------------------------------------------------------------
 // Main entry point
-// ---------------------------------------------------------------------------
 
 /**
  * Run the Drift Engine: compare Symbiote doc claims against Morphologist AST

@@ -20,9 +20,7 @@
 import fs   from 'node:fs';
 import path from 'node:path';
 
-// ---------------------------------------------------------------------------
 // Types
-// ---------------------------------------------------------------------------
 
 /**
  * @typedef {{
@@ -47,9 +45,7 @@ import path from 'node:path';
  * }} PRPayload
  */
 
-// ---------------------------------------------------------------------------
 // Branch name sanitiser
-// ---------------------------------------------------------------------------
 
 /**
  * Convert an invariant ID + name into a valid git branch name.
@@ -66,9 +62,7 @@ export function formatBranchName(id, name) {
   return `mse/auto-patch/${id.toLowerCase()}-${slug}`;
 }
 
-// ---------------------------------------------------------------------------
 // Markdown formatter
-// ---------------------------------------------------------------------------
 
 /**
  * Render the PR payload as a GitHub-compatible Markdown PR description.
@@ -155,9 +149,7 @@ ${payload.verificationOutput
 `;
 }
 
-// ---------------------------------------------------------------------------
 // JSON formatter
-// ---------------------------------------------------------------------------
 
 /**
  * Render the PR payload as a machine-readable JSON object.
@@ -196,9 +188,7 @@ export function formatJSON(payload) {
   };
 }
 
-// ---------------------------------------------------------------------------
 // File writer
-// ---------------------------------------------------------------------------
 
 /**
  * Write the full PR payload to disk in both Markdown and JSON formats.

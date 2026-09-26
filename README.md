@@ -1,4 +1,4 @@
-# Morphogenetic Software Engine (Project MSE) 🧬
+# Morphogenetic Software Engine (Project MSE) 
 
 [![Tests: 196 Passed](https://img.shields.io/badge/Tests-196%20Passed%20(100%25)-success?style=for-the-badge&logo=vitest)](./test)
 [![Release: v1.0.0-final](https://img.shields.io/badge/Release-v1.0.0--final-blue?style=for-the-badge)](./docs/SESSION_SUMMARY.md)
@@ -12,7 +12,7 @@ The **Morphogenetic Software Engine (Project MSE)** treats software systems as d
 
 ---
 
-## 📑 Table of Contents
+##  Table of Contents
 
 - [Key Architecture & Subagents](#-key-architecture--subagents)
   - [Subagent Alpha: The Morphologist](#1-subagent-alpha-the-morphologist-ast-topology)
@@ -30,7 +30,7 @@ The **Morphogenetic Software Engine (Project MSE)** treats software systems as d
 
 ---
 
-## 🧠 Key Architecture & Subagents
+##  Key Architecture & Subagents
 
 ### 1. Subagent Alpha: The Morphologist (AST Topology)
 - **Static Invariant Extraction**: Scans multi-file source trees (JavaScript, TypeScript, Python) using safe AST visitors.
@@ -71,15 +71,15 @@ $$E(S) = D_{\text{intent}} + \lambda R_{\text{inv}} + \gamma L_{\text{ast}}$$
 
 ### 5. Enterprise Data Privacy & Anti-Leakage Shield
 A production-grade, zero-trust sanitization and in-memory execution layer enforcing IBM Cloud credential safety:
-- **Pass 1 — Hard Exclusion**: Neutralizes `.env`, `.env.*`, `credentials.json`, `service-account.json`, `*.pem`, `*.key` with static safe stubs.
-- **Pass 2 — Regex Masking**: Neutralizes cloud keys (AWS AKIA, GCP service accounts, Azure connection strings), cryptographic keys (RSA/PEM blocks), tokens (JWT, Stripe, GitHub), and Database DSNs (PostgreSQL, MongoDB, Redis, MySQL) while **preserving schema topology** for AST parsing.
-- **Pass 3 — Shannon Entropy Scanner**: Automatically redacts high-entropy quoted literals ($\ge 4.0\text{ bits/char}$, length $\ge 20$) with sentinel double-redaction guards.
+- **Pass 1  -  Hard Exclusion**: Neutralizes `.env`, `.env.*`, `credentials.json`, `service-account.json`, `*.pem`, `*.key` with static safe stubs.
+- **Pass 2  -  Regex Masking**: Neutralizes cloud keys (AWS AKIA, GCP service accounts, Azure connection strings), cryptographic keys (RSA/PEM blocks), tokens (JWT, Stripe, GitHub), and Database DSNs (PostgreSQL, MongoDB, Redis, MySQL) while **preserving schema topology** for AST parsing.
+- **Pass 3  -  Shannon Entropy Scanner**: Automatically redacts high-entropy quoted literals ($\ge 4.0\text{ bits/char}$, length $\ge 20$) with sentinel double-redaction guards.
 - **Ephemeral In-Memory Execution**: Raw file buffers are purged (`purgeRawBuffer`) after ingestion.
 - **Compliance Audit Attestation**: Automatically compiles `privacy_compliance_audit.json` with per-category counters, token hashes only, and a verifiable SHA-256 integrity checksum.
 
 ---
 
-## 🔄 Architecture Flow Diagram
+##  Architecture Flow Diagram
 
 ```mermaid
 flowchart TD
@@ -123,7 +123,7 @@ flowchart TD
 
 ---
 
-## 💻 Web Dashboard UI (`project-mse`)
+##  Web Dashboard UI (`project-mse`)
 
 The repository includes a modern, high-performance web dashboard built with **React 19** and **Vite 8** that provides real-time visibility into the engine:
 
@@ -135,7 +135,7 @@ The repository includes a modern, high-performance web dashboard built with **Re
 
 ---
 
-## 🚀 Deploying to Vercel
+##  Deploying to Vercel
 
 The dashboard is pre-configured for zero-configuration, 1-click deployment on **Vercel**.
 
@@ -172,7 +172,7 @@ If you configure Vercel with Root Directory set to `project-mse`:
 
 ---
 
-## ⚡ Local Quickstart
+##  Local Quickstart
 
 ### Prerequisites
 - **Node.js**: `>= 18.0.0` (Recommended: Node 20 or 24)
@@ -231,32 +231,32 @@ node src/core/engine.js ./test/fixtures/target_repo .mse-output
 
 ---
 
-## 🧪 Verification Test Suite
+##  Verification Test Suite
 
 The engine is backed by an exhaustive test suite covering parsers, invariant manifolds, state buses, CEGIS patch synthesis, reconcilers, enterprise sanitization, and full E2E pipelines:
 
 ```
 Test Files  8 passed (8)
-Tests       196 passed (196) — 100% Pass Rate
+Tests       196 passed (196)  -  100% Pass Rate
 Failures    0
 Duration    ~4.8s
 ```
 
 | Suite | Tests | Component Covered | Result |
 |---|---|---|---|
-| [`test/unit/javascript-parser.test.js`](./test/unit/javascript-parser.test.js) | 8 | AST Parsers (JS, TS, Python) | ✅ 100% Pass |
-| [`test/unit/invariant-manifold.test.js`](./test/unit/invariant-manifold.test.js) | 6 | Invariant Manifold & $E(S)$ Formula | ✅ 100% Pass |
-| [`test/unit/state-bus.test.js`](./test/unit/state-bus.test.js) | 6 | StateBus Telemetry & In-Memory Ordering | ✅ 100% Pass |
-| [`test/security/sanitizer.spec.js`](./test/security/sanitizer.spec.js) | 59 | Pre-Flight Sanitizer & Audit Verification (S1–S14) | ✅ 100% Pass |
-| [`test/invariant/morphologist-cegis.test.js`](./test/invariant/morphologist-cegis.test.js) | 7 | Alpha + Gamma CEGIS Pipeline | ✅ 100% Pass |
-| [`test/reconciler.spec.js`](./test/reconciler.spec.js) | 43 | Beta Reconciler (Symbiote + Drift Engine) | ✅ 100% Pass |
-| [`test/integration/phase5-e2e.test.js`](./test/integration/phase5-e2e.test.js) | 37 | Phase 5 Full E2E Pipeline on `target_repo` | ✅ 100% Pass |
-| [`test/immune.spec.js`](./test/immune.spec.js) | 30 | Immune Core, Patch Synthesizer & PR Formatter | ✅ 100% Pass |
-| **Total** | **196** | **Complete Engine & Security Shield** | **✅ 100%** |
+| [`test/unit/javascript-parser.test.js`](./test/unit/javascript-parser.test.js) | 8 | AST Parsers (JS, TS, Python) | [PASS] 100% Pass |
+| [`test/unit/invariant-manifold.test.js`](./test/unit/invariant-manifold.test.js) | 6 | Invariant Manifold & $E(S)$ Formula | [PASS] 100% Pass |
+| [`test/unit/state-bus.test.js`](./test/unit/state-bus.test.js) | 6 | StateBus Telemetry & In-Memory Ordering | [PASS] 100% Pass |
+| [`test/security/sanitizer.spec.js`](./test/security/sanitizer.spec.js) | 59 | Pre-Flight Sanitizer & Audit Verification (S1-S14) | [PASS] 100% Pass |
+| [`test/invariant/morphologist-cegis.test.js`](./test/invariant/morphologist-cegis.test.js) | 7 | Alpha + Gamma CEGIS Pipeline | [PASS] 100% Pass |
+| [`test/reconciler.spec.js`](./test/reconciler.spec.js) | 43 | Beta Reconciler (Symbiote + Drift Engine) | [PASS] 100% Pass |
+| [`test/integration/phase5-e2e.test.js`](./test/integration/phase5-e2e.test.js) | 37 | Phase 5 Full E2E Pipeline on `target_repo` | [PASS] 100% Pass |
+| [`test/immune.spec.js`](./test/immune.spec.js) | 30 | Immune Core, Patch Synthesizer & PR Formatter | [PASS] 100% Pass |
+| **Total** | **196** | **Complete Engine & Security Shield** | **[PASS] 100%** |
 
 ---
 
-## 📁 Repository Structure
+##  Repository Structure
 
 ```
 .
@@ -303,6 +303,6 @@ Duration    ~4.8s
 
 ---
 
-## 📄 License
+##  License
 
 This project is licensed under the [MIT License](./LICENSE).

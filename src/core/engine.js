@@ -185,7 +185,7 @@ export class MSEEngine {
         })),
     ];
 
-    // ZERO-TRUST: Sanitize the violations array — evidence excerpts may contain
+    // ZERO-TRUST: Sanitize the violations array  -  evidence excerpts may contain
     // raw source snippets with embedded credentials.
     const { sanitized: violations, miniAudit: gammaAudit } =
       sanitizeASTPayloadInline(rawViolations, 'violations');
@@ -263,10 +263,8 @@ export class MSEEngine {
     return payloads;
   }
 
-  // -------------------------------------------------------------------------
-  // Main run
-  // -------------------------------------------------------------------------
-
+    // Main run
+  
   /**
    * Execute the full three-phase MSE pipeline.
    * @returns {Promise<EngineResult>}

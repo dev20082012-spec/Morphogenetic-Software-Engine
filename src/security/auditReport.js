@@ -257,7 +257,7 @@ export async function runComplianceAudit(options) {
         excluded:    result.excluded,
         redactions:  result.redacted,
         categories:  [...new Set(result.events.map(e => e.category))],
-        // Token hashes only — no raw values ever
+        // Token hashes only  -  no raw values ever
         tokenHashes: result.events.map(e => e.tokenHash),
       });
     }

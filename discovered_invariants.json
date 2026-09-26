@@ -1,0 +1,129 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2025-01-01T00:00:00.000Z",
+  "repositoryRoot": "/path/to/repository",
+  "summary": {
+    "totalFilesScanned": 42,
+    "entryPointCount": 2,
+    "routeCount": 14,
+    "asyncBoundaryCount": 37,
+    "stateMutationCount": 89,
+    "invariantViolations": 3,
+    "criticalViolations": 2
+  },
+  "entryPoints": [
+    "src/index.js",
+    "src/server.js"
+  ],
+  "routeManifest": [
+    { "file": "src/routes/users.js", "lineNumber": 12, "excerpt": "router.post('/users', createUserHandler)", "method": "POST" },
+    { "file": "src/routes/users.js", "lineNumber": 28, "excerpt": "router.get('/users/:id', getUserHandler)", "method": "GET" },
+    { "file": "src/routes/auth.js",  "lineNumber": 9,  "excerpt": "router.post('/auth/login', loginHandler)", "method": "POST" },
+    { "file": "src/routes/auth.js",  "lineNumber": 22, "excerpt": "router.post('/auth/refresh', refreshHandler)", "method": "POST" }
+  ],
+  "componentTopology": [
+    {
+      "path": "src/index.js",
+      "isEntryPoint": true,
+      "lineCount": 34,
+      "exports": ["app"],
+      "dependencies": ["src/routes/users", "src/routes/auth", "src/middleware/auth"],
+      "routes": [],
+      "asyncBoundaries": [],
+      "stateMutations": [],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": []
+      }
+    },
+    {
+      "path": "src/routes/users.js",
+      "isEntryPoint": false,
+      "lineCount": 112,
+      "exports": ["router"],
+      "dependencies": ["src/db/users", "src/models/User"],
+      "routes": [
+        { "lineNumber": 12, "excerpt": "router.post('/users', createUserHandler)", "method": "POST" },
+        { "lineNumber": 28, "excerpt": "router.get('/users/:id', getUserHandler)", "method": "GET" }
+      ],
+      "asyncBoundaries": [
+        { "lineNumber": 15, "excerpt": "const user = await db.users.create(data);" },
+        { "lineNumber": 31, "excerpt": "const user = await db.users.findById(req.params.id);" }
+      ],
+      "stateMutations": [
+        { "lineNumber": 15, "excerpt": "const user = await db.users.create(data);" },
+        { "lineNumber": 44, "excerpt": "await db.users.update(id, payload);" }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": []
+      }
+    },
+    {
+      "path": "src/db/transaction.js",
+      "isEntryPoint": false,
+      "lineCount": 58,
+      "exports": ["withTransaction"],
+      "dependencies": ["src/db/pool"],
+      "routes": [],
+      "asyncBoundaries": [
+        { "lineNumber": 12, "excerpt": "await pool.query('BEGIN');" }
+      ],
+      "stateMutations": [
+        { "lineNumber": 24, "excerpt": "await pool.query(sql, params);" }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [
+          { "lineNumber": 12, "excerpt": "await pool.query('BEGIN');" }
+        ],
+        "tokenValidationSequences": []
+      }
+    }
+  ],
+  "dependencyGraph": {
+    "src/index.js": ["src/routes/users", "src/routes/auth", "src/middleware/auth"],
+    "src/routes/users.js": ["src/db/users", "src/models/User"],
+    "src/routes/auth.js": ["src/middleware/auth", "src/db/users"],
+    "src/db/transaction.js": ["src/db/pool"],
+    "src/middleware/auth.js": []
+  },
+  "discoveredInvariants": [
+    {
+      "id": "INV-001",
+      "type": "SECURITY",
+      "name": "Unguarded Async State Mutation",
+      "description": "Files containing both async boundaries and state mutations with no token validation in scope violate the authentication-before-write invariant.",
+      "severity": "CRITICAL",
+      "affectedFiles": ["src/routes/users.js"],
+      "evidence": [
+        { "lineNumber": 15, "excerpt": "const user = await db.users.create(data);" },
+        { "lineNumber": 44, "excerpt": "await db.users.update(id, payload);" }
+      ]
+    },
+    {
+      "id": "INV-003-src_db_transaction_js",
+      "type": "DATA_INTEGRITY",
+      "name": "Unclosed Transaction Boundary",
+      "description": "File 'src/db/transaction.js' opens a database transaction but contains no COMMIT or ROLLBACK. Uncommitted transactions can cause data corruption and lock escalation.",
+      "severity": "CRITICAL",
+      "affectedFiles": ["src/db/transaction.js"],
+      "evidence": [
+        { "lineNumber": 12, "excerpt": "await pool.query('BEGIN');" }
+      ]
+    },
+    {
+      "id": "INV-004-src_routes_legacy_js",
+      "type": "CORRECTNESS",
+      "name": "Synchronous I/O in Route Handler",
+      "description": "Route file 'src/routes/legacy.js' imports I/O-heavy modules but has no async boundaries. Synchronous I/O blocks the event loop under load.",
+      "severity": "HIGH",
+      "affectedFiles": ["src/routes/legacy.js"],
+      "evidence": [
+        { "lineNumber": 8, "excerpt": "router.get('/legacy/export', exportHandler)" }
+      ]
+    }
+  ]
+}

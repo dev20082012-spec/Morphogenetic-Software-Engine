@@ -1,0 +1,451 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-09-26T13:21:51.585Z",
+  "repositoryRoot": "C:\\Users\\omen\\Morphogenetic Software Engine\\test\\fixtures\\target_repo",
+  "docFiles": [
+    ".mse-final\\discovered_invariants.json",
+    ".mse-final\\drift_report.json",
+    ".mse-final\\engine_summary.json",
+    ".mse-final\\immune_report.json",
+    ".mse-final\\pr\\DRIFT-EVU-002.json",
+    ".mse-final\\pr\\DRIFT-EVU-002.md",
+    ".mse-final\\pr\\DRIFT-EVU-003.json",
+    ".mse-final\\pr\\DRIFT-EVU-003.md",
+    ".mse-final\\pr\\DRIFT-HU-005.json",
+    ".mse-final\\pr\\DRIFT-HU-005.md",
+    ".mse-final\\pr\\DRIFT-PM-001.json",
+    ".mse-final\\pr\\DRIFT-PM-001.md",
+    ".mse-final\\pr\\DRIFT-RU-006.json",
+    ".mse-final\\pr\\DRIFT-RU-006.md",
+    ".mse-final\\pr\\DRIFT-RU-007.json",
+    ".mse-final\\pr\\DRIFT-RU-007.md",
+    ".mse-final\\pr\\INV-001.json",
+    ".mse-final\\pr\\INV-001.md",
+    ".mse-final\\symbiote_report.json",
+    ".mse-shield\\discovered_invariants.json",
+    "docs\\openapi.yaml",
+    "README.md"
+  ],
+  "sourceFiles": [
+    ".mse-final\\cegis-antigens\\DRIFT-EVU-002.antigen.test.js",
+    ".mse-final\\cegis-antigens\\DRIFT-EVU-003.antigen.test.js",
+    ".mse-final\\cegis-antigens\\DRIFT-HU-005.antigen.test.js",
+    ".mse-final\\cegis-antigens\\DRIFT-PM-001.antigen.test.js",
+    ".mse-final\\cegis-antigens\\DRIFT-RU-006.antigen.test.js",
+    ".mse-final\\cegis-antigens\\DRIFT-RU-007.antigen.test.js",
+    ".mse-final\\cegis-antigens\\INV-001.antigen.test.js",
+    ".mse-final\\pr\\antigens\\DRIFT-EVU-002.antigen.test.js",
+    ".mse-final\\pr\\antigens\\DRIFT-EVU-003.antigen.test.js",
+    ".mse-final\\pr\\antigens\\DRIFT-HU-005.antigen.test.js",
+    ".mse-final\\pr\\antigens\\DRIFT-PM-001.antigen.test.js",
+    ".mse-final\\pr\\antigens\\DRIFT-RU-006.antigen.test.js",
+    ".mse-final\\pr\\antigens\\DRIFT-RU-007.antigen.test.js",
+    ".mse-final\\pr\\antigens\\INV-001.antigen.test.js",
+    "index.js",
+    "src\\controllers\\ordersController.js",
+    "src\\controllers\\usersController.js",
+    "src\\db\\pool.js",
+    "src\\routes\\orders.js",
+    "src\\routes\\users.js",
+    "src\\routes\\webhook.js"
+  ],
+  "proseClaims": [
+    {
+      "sourceFile": ".mse-final\\pr\\DRIFT-EVU-002.md",
+      "sourceKind": "markdown",
+      "portBindings": [],
+      "envVars": [
+        "DOCUMENTATION_UPDATE"
+      ],
+      "requiredHeaders": [],
+      "authSchemes": [],
+      "runtimeVersions": [],
+      "dbUrls": [],
+      "rawText": "## MSE Auto-Patch: Update 'index.js, src\\controllers\\ordersController.js, src\\c\n\n**Branch:** `mse/auto-patch/drift-evu-002-update-index-js-src-controllers-ordersco`\n**Invariant ID:** `DRIFT-EVU-002`\n**Type:** CORRECTNESS | **Severity:** HIGH\n**Verification:** PENDING\n**Generated:** 2026-09-26T13:00:58.093Z\n\n---\n\n### Invariant Violation Summary\n\nThe MSE Morphologist detected a **HIGH** invariant violation\nin the following file(s): `index.js, src\\controllers\\ordersController.js, src\\controllers\\usersController.js, src\\db\\pool.js, src\\routes\\orders.js, src\\routes\\users.js, src\\routes\\webhook.js`.\n\n| Metric | Before patch | After patch |\n|---|---|---|\n| System energy E(S) | `6.3714` | `6.3214` |\n| Energy delta | | `-0.0500` |\n| D_intent score | `6.1429` | |\n| Synthesis speed | | `7,19,160 ops/sec` |\n\n---\n\n### Synthesized Counterexample (Antigen Test)\n\nFile: `cegis-antigens\\DRIFT-EVU-002.antigen.test.js`\n\n```js\n/**\n * MSE Immune Core -- Synthesized Antigen Test\n * Violation : DRIFT-EVU-002 [DRIFT/HIGH]\n * Target    : index.js, src\\controllers\\ordersController.js, src\\controllers\\usersController.js, src\\db\\pool.js, src\\routes\\orders.js, src\\routes\\users.js, src\\routes\\webhook.js\n * Generated : 2026-09-26T13:00:57.834Z\n *\n * This test is synthesized to be RED (failing) in the current codebase.\n * After the Immune Core applies its patch it MUST transition to GREEN.\n */\nimport { describe, it, expect, vi, beforeEach } from 'vitest';\n\ndescribe('DRIFT-EVU-002 -- Code reads env var \\'PORT\\' which is not declared in documentation.', () => {\n  it('RED: synchronous I/O blocks event loop under concurrent load', async () => {\n    const order = [];\n\n    // Simulates a blocking sync operation in a route handler (index.js, src\\controllers\\ordersController.js, src\\controllers\\usersController.js, src\\db\\pool.js, src\\routes\\orders.js, src\\routes\\users.js, src\\routes\\webhook.js)\n    // Line ?: blocking call\n    const syncHandler = () => {\n      order.push('A:start');\n      // Blocking: simulates readFileSync / CPU spin\n      for (let i = 0; i < 1000; i++) { /* spin */ }\n      order.push('A:end');\n    };\n\n    const concurrentOp = async () => { order.push('B'); };\n\n    syncHandler();\n    await concurrentOp();\n\n    // If A is sync, B cannot interleave -- it only runs after A:end\n    // This assertion FAILS when the handler correctly uses async I/O\n    // and PASSES (proving the violation) when it's sync-blocking\n    const bIndex = order.indexOf('B');\n    const aEnd   = order.indexOf('A:end');\n    expect(bIndex).toBeGreaterThan(aEnd); // B runs after A completes sync\n  });\n\n  it('GREEN baseline: async handler allows B to interleave', async () => {\n    const order = [];\n    const asyncHandler = async () => {\n      order.push('A:start');\n      await Promise.resolve(); // yields to event loop\n      order.push('A:end');\n    };\n    const concurrentOp = async () => { order.push('B'); };\n\n    const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);\n    expect(order).toContain('B');\n    expect(order).toContain('A:end');\n  });\n});\n```\n\n---\n\n### Patch Descriptors\n\n\n### index.js, src\\controllers\\ordersController.js, src\\controllers\\usersController.js, src\\db\\pool.js, src\\routes\\orders.js, src\\routes\\users.js, src\\routes\\webhook.js\n\n**Strategy:** `DOCUMENTATION_UPDATE`\n**Confidence:** LOW\n\nUpdate 'index.js, src\\controllers\\ordersController.js, src\\controllers\\usersController.js, src\\db\\pool.js, src\\routes\\orders.js, src\\routes\\users.js, src\\routes\\webhook.js' to reflect actual runtime values. Code reads env var 'PORT' which is not declared in documentation.\n\n```diff\n# Manual update required in index.js, src\\controllers\\ordersController.js, src\\controllers\\usersController.js, src\\db\\pool.js, src\\routes\\orders.js, src\\routes\\users.js, src\\routes\\webhook.js\n# Code reads env var 'PORT' which is not declared in documentation.\n```\n\n**Repaired snippet:**\n```js\n// No code change required -- documentation must be updated.\n```\n\n**Postconditions verified:**\n- Documentation accurately reflects current code behaviour\n- D_intent score decreases after update\n\n\n---\n\n### Verification Proof\n\nState transition: **UNKNOWN** -> **UNKNOWN**\n\n```\nverification skipped\n```\n\n---\n\n*Generated by MSE Immune Core v1.0.0 in 0ms.*\n"
+    },
+    {
+      "sourceFile": ".mse-final\\pr\\DRIFT-EVU-003.md",
+      "sourceKind": "markdown",
+      "portBindings": [],
+      "envVars": [
+        "DOCUMENTATION_UPDATE"
+      ],
+      "requiredHeaders": [],
+      "authSchemes": [],
+      "runtimeVersions": [],
+      "dbUrls": [],
+      "rawText": "## MSE Auto-Patch: Update 'index.js, src\\controllers\\ordersController.js, src\\c\n\n**Branch:** `mse/auto-patch/drift-evu-003-update-index-js-src-controllers-ordersco`\n**Invariant ID:** `DRIFT-EVU-003`\n**Type:** CORRECTNESS | **Severity:** HIGH\n**Verification:** PENDING\n**Generated:** 2026-09-26T13:00:58.093Z\n\n---\n\n### Invariant Violation Summary\n\nThe MSE Morphologist detected a **HIGH** invariant violation\nin the following file(s): `index.js, src\\controllers\\ordersController.js, src\\controllers\\usersController.js, src\\db\\pool.js, src\\routes\\orders.js, src\\routes\\users.js, src\\routes\\webhook.js`.\n\n| Metric | Before patch | After patch |\n|---|---|---|\n| System energy E(S) | `6.3714` | `6.3214` |\n| Energy delta | | `-0.0500` |\n| D_intent score | `6.1429` | |\n| Synthesis speed | | `7,08,620 ops/sec` |\n\n---\n\n### Synthesized Counterexample (Antigen Test)\n\nFile: `cegis-antigens\\DRIFT-EVU-003.antigen.test.js`\n\n```js\n/**\n * MSE Immune Core -- Synthesized Antigen Test\n * Violation : DRIFT-EVU-003 [DRIFT/HIGH]\n * Target    : index.js, src\\controllers\\ordersController.js, src\\controllers\\usersController.js, src\\db\\pool.js, src\\routes\\orders.js, src\\routes\\users.js, src\\routes\\webhook.js\n * Generated : 2026-09-26T13:00:57.887Z\n *\n * This test is synthesized to be RED (failing) in the current codebase.\n * After the Immune Core applies its patch it MUST transition to GREEN.\n */\nimport { describe, it, expect, vi, beforeEach } from 'vitest';\n\ndescribe('DRIFT-EVU-003 -- Code reads env var \\'WEBHOOK_SECRET\\' which is not declared in documentation.', () => {\n  it('RED: synchronous I/O blocks event loop under concurrent load', async () => {\n    const order = [];\n\n    // Simulates a blocking sync operation in a route handler (index.js, src\\controllers\\ordersController.js, src\\controllers\\usersController.js, src\\db\\pool.js, src\\routes\\orders.js, src\\routes\\users.js, src\\routes\\webhook.js)\n    // Line ?: blocking call\n    const syncHandler = () => {\n      order.push('A:start');\n      // Blocking: simulates readFileSync / CPU spin\n      for (let i = 0; i < 1000; i++) { /* spin */ }\n      order.push('A:end');\n    };\n\n    const concurrentOp = async () => { order.push('B'); };\n\n    syncHandler();\n    await concurrentOp();\n\n    // If A is sync, B cannot interleave -- it only runs after A:end\n    // This assertion FAILS when the handler correctly uses async I/O\n    // and PASSES (proving the violation) when it's sync-blocking\n    const bIndex = order.indexOf('B');\n    const aEnd   = order.indexOf('A:end');\n    expect(bIndex).toBeGreaterThan(aEnd); // B runs after A completes sync\n  });\n\n  it('GREEN baseline: async handler allows B to interleave', async () => {\n    const order = [];\n    const asyncHandler = async () => {\n      order.push('A:start');\n      await Promise.resolve(); // yields to event loop\n      order.push('A:end');\n    };\n    const concurrentOp = async () => { order.push('B'); };\n\n    const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);\n    expect(order).toContain('B');\n    expect(order).toContain('A:end');\n  });\n});\n```\n\n---\n\n### Patch Descriptors\n\n\n### index.js, src\\controllers\\ordersController.js, src\\controllers\\usersController.js, src\\db\\pool.js, src\\routes\\orders.js, src\\routes\\users.js, src\\routes\\webhook.js\n\n**Strategy:** `DOCUMENTATION_UPDATE`\n**Confidence:** LOW\n\nUpdate 'index.js, src\\controllers\\ordersController.js, src\\controllers\\usersController.js, src\\db\\pool.js, src\\routes\\orders.js, src\\routes\\users.js, src\\routes\\webhook.js' to reflect actual runtime values. Code reads env var 'WEBHOOK_SECRET' which is not declared in documentation.\n\n```diff\n# Manual update required in index.js, src\\controllers\\ordersController.js, src\\controllers\\usersController.js, src\\db\\pool.js, src\\routes\\orders.js, src\\routes\\users.js, src\\routes\\webhook.js\n# Code reads env var 'WEBHOOK_SECRET' which is not declared in documentation.\n```\n\n**Repaired snippet:**\n```js\n// No code change required -- documentation must be updated.\n```\n\n**Postconditions verified:**\n- Documentation accurately reflects current code behaviour\n- D_intent score decreases after update\n\n\n---\n\n### Verification Proof\n\nState transition: **UNKNOWN** -> **UNKNOWN**\n\n```\nverification skipped\n```\n\n---\n\n*Generated by MSE Immune Core v1.0.0 in 0ms.*\n"
+    },
+    {
+      "sourceFile": ".mse-final\\pr\\DRIFT-HU-005.md",
+      "sourceKind": "markdown",
+      "portBindings": [],
+      "envVars": [
+        "DOCUMENTATION_UPDATE"
+      ],
+      "requiredHeaders": [],
+      "authSchemes": [],
+      "runtimeVersions": [],
+      "dbUrls": [],
+      "rawText": "## MSE Auto-Patch: Update 'index.js, src\\controllers\\ordersController.js, src\\c\n\n**Branch:** `mse/auto-patch/drift-hu-005-update-index-js-src-controllers-ordersco`\n**Invariant ID:** `DRIFT-HU-005`\n**Type:** CORRECTNESS | **Severity:** HIGH\n**Verification:** PENDING\n**Generated:** 2026-09-26T13:00:58.093Z\n\n---\n\n### Invariant Violation Summary\n\nThe MSE Morphologist detected a **HIGH** invariant violation\nin the following file(s): `index.js, src\\controllers\\ordersController.js, src\\controllers\\usersController.js, src\\db\\pool.js, src\\routes\\orders.js, src\\routes\\users.js, src\\routes\\webhook.js`.\n\n| Metric | Before patch | After patch |\n|---|---|---|\n| System energy E(S) | `6.3714` | `6.3214` |\n| Energy delta | | `-0.0500` |\n| D_intent score | `6.1429` | |\n| Synthesis speed | | `7,34,060 ops/sec` |\n\n---\n\n### Synthesized Counterexample (Antigen Test)\n\nFile: `cegis-antigens\\DRIFT-HU-005.antigen.test.js`\n\n```js\n/**\n * MSE Immune Core -- Synthesized Antigen Test\n * Violation : DRIFT-HU-005 [DRIFT/HIGH]\n * Target    : index.js, src\\controllers\\ordersController.js, src\\controllers\\usersController.js, src\\db\\pool.js, src\\routes\\orders.js, src\\routes\\users.js, src\\routes\\webhook.js\n * Generated : 2026-09-26T13:00:57.938Z\n *\n * This test is synthesized to be RED (failing) in the current codebase.\n * After the Immune Core applies its patch it MUST transition to GREEN.\n */\nimport { describe, it, expect, vi, beforeEach } from 'vitest';\n\ndescribe('DRIFT-HU-005 -- Code requires header \\'authorization\\' which is absent from all documentation.', () => {\n  it('RED: synchronous I/O blocks event loop under concurrent load', async () => {\n    const order = [];\n\n    // Simulates a blocking sync operation in a route handler (index.js, src\\controllers\\ordersController.js, src\\controllers\\usersController.js, src\\db\\pool.js, src\\routes\\orders.js, src\\routes\\users.js, src\\routes\\webhook.js)\n    // Line ?: blocking call\n    const syncHandler = () => {\n      order.push('A:start');\n      // Blocking: simulates readFileSync / CPU spin\n      for (let i = 0; i < 1000; i++) { /* spin */ }\n      order.push('A:end');\n    };\n\n    const concurrentOp = async () => { order.push('B'); };\n\n    syncHandler();\n    await concurrentOp();\n\n    // If A is sync, B cannot interleave -- it only runs after A:end\n    // This assertion FAILS when the handler correctly uses async I/O\n    // and PASSES (proving the violation) when it's sync-blocking\n    const bIndex = order.indexOf('B');\n    const aEnd   = order.indexOf('A:end');\n    expect(bIndex).toBeGreaterThan(aEnd); // B runs after A completes sync\n  });\n\n  it('GREEN baseline: async handler allows B to interleave', async () => {\n    const order = [];\n    const asyncHandler = async () => {\n      order.push('A:start');\n      await Promise.resolve(); // yields to event loop\n      order.push('A:end');\n    };\n    const concurrentOp = async () => { order.push('B'); };\n\n    const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);\n    expect(order).toContain('B');\n    expect(order).toContain('A:end');\n  });\n});\n```\n\n---\n\n### Patch Descriptors\n\n\n### index.js, src\\controllers\\ordersController.js, src\\controllers\\usersController.js, src\\db\\pool.js, src\\routes\\orders.js, src\\routes\\users.js, src\\routes\\webhook.js\n\n**Strategy:** `DOCUMENTATION_UPDATE`\n**Confidence:** LOW\n\nUpdate 'index.js, src\\controllers\\ordersController.js, src\\controllers\\usersController.js, src\\db\\pool.js, src\\routes\\orders.js, src\\routes\\users.js, src\\routes\\webhook.js' to reflect actual runtime values. Code requires header 'authorization' which is absent from all documentation.\n\n```diff\n# Manual update required in index.js, src\\controllers\\ordersController.js, src\\controllers\\usersController.js, src\\db\\pool.js, src\\routes\\orders.js, src\\routes\\users.js, src\\routes\\webhook.js\n# Code requires header 'authorization' which is absent from all documentation.\n```\n\n**Repaired snippet:**\n```js\n// No code change required -- documentation must be updated.\n```\n\n**Postconditions verified:**\n- Documentation accurately reflects current code behaviour\n- D_intent score decreases after update\n\n\n---\n\n### Verification Proof\n\nState transition: **UNKNOWN** -> **UNKNOWN**\n\n```\nverification skipped\n```\n\n---\n\n*Generated by MSE Immune Core v1.0.0 in 0ms.*\n"
+    },
+    {
+      "sourceFile": ".mse-final\\pr\\DRIFT-PM-001.md",
+      "sourceKind": "markdown",
+      "portBindings": [
+        "3000"
+      ],
+      "envVars": [
+        "SYNC_IO_TO_ASYNC"
+      ],
+      "requiredHeaders": [],
+      "authSchemes": [],
+      "runtimeVersions": [],
+      "dbUrls": [],
+      "rawText": "## MSE Auto-Patch: Replace synchronous I/O call at line 1 in index.js with its \n\n**Branch:** `mse/auto-patch/drift-pm-001-replace-synchronous-i-o-call-at-line-1-i`\n**Invariant ID:** `DRIFT-PM-001`\n**Type:** CORRECTNESS | **Severity:** HIGH\n**Verification:** PENDING\n**Generated:** 2026-09-26T13:00:58.093Z\n\n---\n\n### Invariant Violation Summary\n\nThe MSE Morphologist detected a **HIGH** invariant violation\nin the following file(s): `index.js`.\n\n| Metric | Before patch | After patch |\n|---|---|---|\n| System energy E(S) | `6.3714` | `6.3214` |\n| Energy delta | | `-0.0500` |\n| D_intent score | `6.1429` | |\n| Synthesis speed | | `6,91,160 ops/sec` |\n\n---\n\n### Synthesized Counterexample (Antigen Test)\n\nFile: `cegis-antigens\\DRIFT-PM-001.antigen.test.js`\n\n```js\n/**\n * MSE Immune Core -- Synthesized Antigen Test\n * Violation : DRIFT-PM-001 [CORRECTNESS/CRITICAL]\n * Target    : index.js\n * Generated : 2026-09-26T13:00:57.782Z\n *\n * This test is synthesized to be RED (failing) in the current codebase.\n * After the Immune Core applies its patch it MUST transition to GREEN.\n */\nimport { describe, it, expect, vi, beforeEach } from 'vitest';\n\ndescribe('DRIFT-PM-001 -- Documentation claims port 3000 but code binds to: 8080.', () => {\n  it('RED: synchronous I/O blocks event loop under concurrent load', async () => {\n    const order = [];\n\n    // Simulates a blocking sync operation in a route handler (index.js)\n    // Line ?: blocking call\n    const syncHandler = () => {\n      order.push('A:start');\n      // Blocking: simulates readFileSync / CPU spin\n      for (let i = 0; i < 1000; i++) { /* spin */ }\n      order.push('A:end');\n    };\n\n    const concurrentOp = async () => { order.push('B'); };\n\n    syncHandler();\n    await concurrentOp();\n\n    // If A is sync, B cannot interleave -- it only runs after A:end\n    // This assertion FAILS when the handler correctly uses async I/O\n    // and PASSES (proving the violation) when it's sync-blocking\n    const bIndex = order.indexOf('B');\n    const aEnd   = order.indexOf('A:end');\n    expect(bIndex).toBeGreaterThan(aEnd); // B runs after A completes sync\n  });\n\n  it('GREEN baseline: async handler allows B to interleave', async () => {\n    const order = [];\n    const asyncHandler = async () => {\n      order.push('A:start');\n      await Promise.resolve(); // yields to event loop\n      order.push('A:end');\n    };\n    const concurrentOp = async () => { order.push('B'); };\n\n    const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);\n    expect(order).toContain('B');\n    expect(order).toContain('A:end');\n  });\n});\n```\n\n---\n\n### Patch Descriptors\n\n\n### index.js\n\n**Strategy:** `SYNC_IO_TO_ASYNC`\n**Confidence:** HIGH\n\nReplace synchronous I/O call at line 1 in index.js with its async equivalent and ensure the enclosing function is declared async.\n\n```diff\n--- a/index.js\n+++ b/index.js\n@@ -1,1 +1,1 @@\n- const data = fs.readFileSync(filePath, 'utf8');\n+ const data = await fs.promises.readFile(filePath, 'utf8');\n```\n\n**Repaired snippet:**\n```js\n// MSE Patch: sync -> async I/O\n// Violation: DRIFT-PM-001 in index.js:1\n// Ensure handler is declared async\nconst data = await fs.promises.readFile(filePath, 'utf8');\n```\n\n**Postconditions verified:**\n- No blocking I/O call remains in the route handler\n- Event loop is not blocked during file/network operations\n- Handler is declared async and awaits all I/O\n\n\n---\n\n### Verification Proof\n\nState transition: **UNKNOWN** -> **UNKNOWN**\n\n```\nverification skipped\n```\n\n---\n\n*Generated by MSE Immune Core v1.0.0 in 0ms.*\n"
+    },
+    {
+      "sourceFile": ".mse-final\\pr\\DRIFT-RU-006.md",
+      "sourceKind": "markdown",
+      "portBindings": [],
+      "envVars": [
+        "DOCUMENTATION_UPDATE"
+      ],
+      "requiredHeaders": [],
+      "authSchemes": [],
+      "runtimeVersions": [],
+      "dbUrls": [],
+      "rawText": "## MSE Auto-Patch: Update 'index.js' to reflect actual runtime values. Route GE\n\n**Branch:** `mse/auto-patch/drift-ru-006-update-index-js-to-reflect-actual-runtim`\n**Invariant ID:** `DRIFT-RU-006`\n**Type:** CORRECTNESS | **Severity:** HIGH\n**Verification:** PENDING\n**Generated:** 2026-09-26T13:00:58.093Z\n\n---\n\n### Invariant Violation Summary\n\nThe MSE Morphologist detected a **HIGH** invariant violation\nin the following file(s): `index.js`.\n\n| Metric | Before patch | After patch |\n|---|---|---|\n| System energy E(S) | `6.3714` | `6.3214` |\n| Energy delta | | `-0.0500` |\n| D_intent score | `6.1429` | |\n| Synthesis speed | | `6,57,500 ops/sec` |\n\n---\n\n### Synthesized Counterexample (Antigen Test)\n\nFile: `cegis-antigens\\DRIFT-RU-006.antigen.test.js`\n\n```js\n/**\n * MSE Immune Core -- Synthesized Antigen Test\n * Violation : DRIFT-RU-006 [DRIFT/HIGH]\n * Target    : index.js\n * Generated : 2026-09-26T13:00:57.989Z\n *\n * This test is synthesized to be RED (failing) in the current codebase.\n * After the Immune Core applies its patch it MUST transition to GREEN.\n */\nimport { describe, it, expect, vi, beforeEach } from 'vitest';\n\ndescribe('DRIFT-RU-006 -- Route GET:/health exists in code (index.js) but is absent from all OpenAPI specs.', () => {\n  it('RED: synchronous I/O blocks event loop under concurrent load', async () => {\n    const order = [];\n\n    // Simulates a blocking sync operation in a route handler (index.js)\n    // Line ?: blocking call\n    const syncHandler = () => {\n      order.push('A:start');\n      // Blocking: simulates readFileSync / CPU spin\n      for (let i = 0; i < 1000; i++) { /* spin */ }\n      order.push('A:end');\n    };\n\n    const concurrentOp = async () => { order.push('B'); };\n\n    syncHandler();\n    await concurrentOp();\n\n    // If A is sync, B cannot interleave -- it only runs after A:end\n    // This assertion FAILS when the handler correctly uses async I/O\n    // and PASSES (proving the violation) when it's sync-blocking\n    const bIndex = order.indexOf('B');\n    const aEnd   = order.indexOf('A:end');\n    expect(bIndex).toBeGreaterThan(aEnd); // B runs after A completes sync\n  });\n\n  it('GREEN baseline: async handler allows B to interleave', async () => {\n    const order = [];\n    const asyncHandler = async () => {\n      order.push('A:start');\n      await Promise.resolve(); // yields to event loop\n      order.push('A:end');\n    };\n    const concurrentOp = async () => { order.push('B'); };\n\n    const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);\n    expect(order).toContain('B');\n    expect(order).toContain('A:end');\n  });\n});\n```\n\n---\n\n### Patch Descriptors\n\n\n### index.js\n\n**Strategy:** `DOCUMENTATION_UPDATE`\n**Confidence:** LOW\n\nUpdate 'index.js' to reflect actual runtime values. Route GET:/health exists in code (index.js) but is absent from all OpenAPI specs.\n\n```diff\n# Manual update required in index.js\n# Route GET:/health exists in code (index.js) but is absent from all OpenAPI specs.\n```\n\n**Repaired snippet:**\n```js\n// No code change required -- documentation must be updated.\n```\n\n**Postconditions verified:**\n- Documentation accurately reflects current code behaviour\n- D_intent score decreases after update\n\n\n---\n\n### Verification Proof\n\nState transition: **UNKNOWN** -> **UNKNOWN**\n\n```\nverification skipped\n```\n\n---\n\n*Generated by MSE Immune Core v1.0.0 in 0ms.*\n"
+    },
+    {
+      "sourceFile": ".mse-final\\pr\\DRIFT-RU-007.md",
+      "sourceKind": "markdown",
+      "portBindings": [],
+      "envVars": [
+        "DOCUMENTATION_UPDATE"
+      ],
+      "requiredHeaders": [],
+      "authSchemes": [],
+      "runtimeVersions": [],
+      "dbUrls": [],
+      "rawText": "## MSE Auto-Patch: Update 'src\\routes\\webhook.js' to reflect actual runtime val\n\n**Branch:** `mse/auto-patch/drift-ru-007-update-src-routes-webhook-js-to-reflect-`\n**Invariant ID:** `DRIFT-RU-007`\n**Type:** CORRECTNESS | **Severity:** HIGH\n**Verification:** PENDING\n**Generated:** 2026-09-26T13:00:58.093Z\n\n---\n\n### Invariant Violation Summary\n\nThe MSE Morphologist detected a **HIGH** invariant violation\nin the following file(s): `src\\routes\\webhook.js`.\n\n| Metric | Before patch | After patch |\n|---|---|---|\n| System energy E(S) | `6.3714` | `6.3214` |\n| Energy delta | | `-0.0500` |\n| D_intent score | `6.1429` | |\n| Synthesis speed | | `7,90,460 ops/sec` |\n\n---\n\n### Synthesized Counterexample (Antigen Test)\n\nFile: `cegis-antigens\\DRIFT-RU-007.antigen.test.js`\n\n```js\n/**\n * MSE Immune Core -- Synthesized Antigen Test\n * Violation : DRIFT-RU-007 [DRIFT/HIGH]\n * Target    : src\\routes\\webhook.js\n * Generated : 2026-09-26T13:00:58.041Z\n *\n * This test is synthesized to be RED (failing) in the current codebase.\n * After the Immune Core applies its patch it MUST transition to GREEN.\n */\nimport { describe, it, expect, vi, beforeEach } from 'vitest';\n\ndescribe('DRIFT-RU-007 -- Route POST:/github exists in code (src\\routes\\webhook.js) but is absent from all OpenAPI specs.', () => {\n  it('RED: synchronous I/O blocks event loop under concurrent load', async () => {\n    const order = [];\n\n    // Simulates a blocking sync operation in a route handler (src\\routes\\webhook.js)\n    // Line ?: blocking call\n    const syncHandler = () => {\n      order.push('A:start');\n      // Blocking: simulates readFileSync / CPU spin\n      for (let i = 0; i < 1000; i++) { /* spin */ }\n      order.push('A:end');\n    };\n\n    const concurrentOp = async () => { order.push('B'); };\n\n    syncHandler();\n    await concurrentOp();\n\n    // If A is sync, B cannot interleave -- it only runs after A:end\n    // This assertion FAILS when the handler correctly uses async I/O\n    // and PASSES (proving the violation) when it's sync-blocking\n    const bIndex = order.indexOf('B');\n    const aEnd   = order.indexOf('A:end');\n    expect(bIndex).toBeGreaterThan(aEnd); // B runs after A completes sync\n  });\n\n  it('GREEN baseline: async handler allows B to interleave', async () => {\n    const order = [];\n    const asyncHandler = async () => {\n      order.push('A:start');\n      await Promise.resolve(); // yields to event loop\n      order.push('A:end');\n    };\n    const concurrentOp = async () => { order.push('B'); };\n\n    const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);\n    expect(order).toContain('B');\n    expect(order).toContain('A:end');\n  });\n});\n```\n\n---\n\n### Patch Descriptors\n\n\n### src\\routes\\webhook.js\n\n**Strategy:** `DOCUMENTATION_UPDATE`\n**Confidence:** LOW\n\nUpdate 'src\\routes\\webhook.js' to reflect actual runtime values. Route POST:/github exists in code (src\\routes\\webhook.js) but is absent from all OpenAPI specs.\n\n```diff\n# Manual update required in src\\routes\\webhook.js\n# Route POST:/github exists in code (src\\routes\\webhook.js) but is absent from all OpenAPI specs.\n```\n\n**Repaired snippet:**\n```js\n// No code change required -- documentation must be updated.\n```\n\n**Postconditions verified:**\n- Documentation accurately reflects current code behaviour\n- D_intent score decreases after update\n\n\n---\n\n### Verification Proof\n\nState transition: **UNKNOWN** -> **UNKNOWN**\n\n```\nverification skipped\n```\n\n---\n\n*Generated by MSE Immune Core v1.0.0 in 0ms.*\n"
+    },
+    {
+      "sourceFile": ".mse-final\\pr\\INV-001.md",
+      "sourceKind": "markdown",
+      "portBindings": [],
+      "envVars": [
+        "AUTH_GUARD_INSERTION"
+      ],
+      "requiredHeaders": [],
+      "authSchemes": [
+        "Bearer"
+      ],
+      "runtimeVersions": [],
+      "dbUrls": [],
+      "rawText": "## MSE Auto-Patch: Unguarded Async State Mutation\n\n**Branch:** `mse/auto-patch/inv-001-unguarded-async-state-mutation`\n**Invariant ID:** `INV-001`\n**Type:** SECURITY | **Severity:** CRITICAL\n**Verification:** PENDING\n**Generated:** 2026-09-26T13:00:58.093Z\n\n---\n\n### Invariant Violation Summary\n\nThe MSE Morphologist detected a **CRITICAL** invariant violation\nin the following file(s): `src\\db\\pool.js`, `src\\routes\\webhook.js`.\n\n| Metric | Before patch | After patch |\n|---|---|---|\n| System energy E(S) | `6.3714` | `6.3214` |\n| Energy delta | | `-0.0500` |\n| D_intent score | `6.1429` | |\n| Synthesis speed | | `6,11,880 ops/sec` |\n\n---\n\n### Synthesized Counterexample (Antigen Test)\n\nFile: `cegis-antigens\\INV-001.antigen.test.js`\n\n```js\n/**\n * MSE Immune Core -- Synthesized Antigen Test\n * Violation : INV-001 [SECURITY/CRITICAL]\n * Target    : src\\db\\pool.js\n * Generated : 2026-09-26T13:00:57.730Z\n *\n * This test is synthesized to be RED (failing) in the current codebase.\n * After the Immune Core applies its patch it MUST transition to GREEN.\n */\nimport { describe, it, expect, vi, beforeEach } from 'vitest';\n\ndescribe('INV-001 -- Unguarded Async State Mutation', () => {\n  let state;\n  let req;\n\n  beforeEach(() => {\n    state = { mutated: false, value: 0 };\n    req   = { headers: {}, user: null }; // no auth injected\n  });\n\n  it('RED: must reject state mutation when Authorization header is absent', async () => {\n    // Reproduces: export const pool = { (line 8 in src\\db\\pool.js)\n    // Precondition: req.user is null, no token is present\n    const guardedWrite = (request, s) => {\n      if (!request.user || !request.headers['authorization']) {\n        throw new Error('Unauthorized: token validation required before write');\n      }\n      s.value  += 1;\n      s.mutated = true;\n    };\n\n    // With correct guard this should throw -- proving the guard exists.\n    // If the guard is MISSING (current state), it will mutate and this expect FAILS.\n    expect(() => guardedWrite(req, state)).toThrow('Unauthorized');\n    expect(state.mutated).toBe(false);\n  });\n\n  it('GREEN baseline: allows mutation when valid token is present', () => {\n    req.headers['authorization'] = 'Bearer valid-token';\n    req.user = { id: 'u1', roles: ['write'] };\n\n    const guardedWrite = (request, s) => {\n      if (!request.user || !request.headers['authorization']) {\n        throw new Error('Unauthorized');\n      }\n      s.value  += 1;\n      s.mutated = true;\n    };\n\n    expect(() => guardedWrite(req, state)).not.toThrow();\n    expect(state.mutated).toBe(true);\n  });\n});\n```\n\n---\n\n### Patch Descriptors\n\n\n### src\\db\\pool.js\n\n**Strategy:** `AUTH_GUARD_INSERTION`\n**Confidence:** HIGH\n\nInsert token-validation guard before 'export const pool = {' at line 8 in src\\db\\pool.js.\n\n```diff\n--- a/src\\db\\pool.js\n+++ b/src\\db\\pool.js\n@@ -8,1 +8,4 @@\n- export const pool = {\n+ if (!req.user || !req.headers['authorization']) {\n+   return res.status(401).json({ error: 'Unauthorized' });\n+ }\n+ export const pool = {\n```\n\n**Repaired snippet:**\n```js\n// MSE Patch: auth guard inserted before state mutation\n// Violation: INV-001 in src\\db\\pool.js:8\nif (!req.user || !req.headers['authorization']) {\n  return res.status(401).json({ error: 'Unauthorized' });\n}\n// original line preserved below:\nexport const pool = {\n```\n\n**Postconditions verified:**\n- req.user is defined before any state mutation executes\n- Authorization header is validated before write operations\n- Unauthenticated requests receive HTTP 401 and no state change occurs\n\n\n---\n\n### Verification Proof\n\nState transition: **UNKNOWN** -> **UNKNOWN**\n\n```\nverification skipped\n```\n\n---\n\n*Generated by MSE Immune Core v1.0.0 in 0ms.*\n"
+    },
+    {
+      "sourceFile": "README.md",
+      "sourceKind": "markdown",
+      "portBindings": [
+        "3000"
+      ],
+      "envVars": [
+        "JWT_SECRET",
+        "DATABASE_URL",
+        "SMTP_HOST",
+        "REDIS_URL"
+      ],
+      "requiredHeaders": [],
+      "authSchemes": [
+        "HMAC-SHA256",
+        "Bearer JWT",
+        "JWT"
+      ],
+      "runtimeVersions": [
+        "18.0.0"
+      ],
+      "dbUrls": [
+        "postgres://localhost/orders"
+      ],
+      "rawText": "# OrderService\n\nA REST microservice for managing users and orders.\n\n## Getting Started\n\nThis service **runs on port 3000** (divergence: code actually uses 8080).\n\nAuthentication is handled via **HMAC-SHA256 webhook signatures** and **Bearer JWT** for user routes.\n\n### Environment Variables\n\n| Variable       | Description                       |\n|----------------|-----------------------------------|\n| `JWT_SECRET`   | JWT signing key (required)        |\n| `DATABASE_URL` | PostgreSQL connection string      |\n| `SMTP_HOST`    | Email relay host (notifications)  |\n\n> **Note**: `REDIS_URL` is NOT listed here, but the code reads it at runtime (undeclared env var drift).\n\n### Routes\n\n| Method | Path                  | Auth          | Description           |\n|--------|-----------------------|---------------|-----------------------|\n| GET    | `/api/users`          | Bearer JWT    | List all users        |\n| POST   | `/api/users`          | Bearer JWT    | Create user           |\n| GET    | `/api/orders`         | Bearer JWT    | List orders           |\n| POST   | `/api/orders`         | Bearer JWT    | Create order          |\n| POST   | `/api/webhook/github` | HMAC-SHA256   | GitHub event webhook  |\n\n### Setup\n\n```bash\nexport JWT_SECRET=supersecret\nexport DATABASE_URL=postgres://localhost/orders\nnpm install\nnpm start\n```\n\n### Node.js Version\n\nRequires Node.js >= 18.0.0.\n"
+    }
+  ],
+  "openApiClaims": [
+    {
+      "sourceFile": ".mse-final\\symbiote_report.json",
+      "sourceKind": "openapi",
+      "title": "OrderService API",
+      "version": "1.0.0",
+      "portBindings": [
+        "3000"
+      ],
+      "envVars": [
+        "JWT_SECRET",
+        "DATABASE_URL",
+        "SMTP_HOST",
+        "REDIS_URL"
+      ],
+      "requiredHeaders": [],
+      "authSchemes": [
+        "http",
+        "bearer",
+        "JWT"
+      ],
+      "routes": [],
+      "rawText": "{\n  \"schemaVersion\": \"1.0.0\",\n  \"generatedAt\": \"2026-09-26T13:00:57.724Z\",\n  \"repositoryRoot\": \"C:\\\\Users\\\\omen\\\\Morphogenetic Software Engine\\\\test\\\\fixtures\\\\target_repo\",\n  \"docFiles\": [\n    \".mse-final\\\\discovered_invariants.json\",\n    \"docs\\\\openapi.yaml\",\n    \"README.md\"\n  ],\n  \"sourceFiles\": [\n    \"index.js\",\n    \"src\\\\controllers\\\\ordersController.js\",\n    \"src\\\\controllers\\\\usersController.js\",\n    \"src\\\\db\\\\pool.js\",\n    \"src\\\\routes\\\\orders.js\",\n    \"src\\\\routes\\\\users.js\",\n    \"src\\\\routes\\\\webhook.js\"\n  ],\n  \"proseClaims\": [\n    {\n      \"sourceFile\": \"README.md\",\n      \"sourceKind\": \"markdown\",\n      \"portBindings\": [\n        \"3000\"\n      ],\n      \"envVars\": [\n        \"JWT_SECRET\",\n        \"DATABASE_URL\",\n        \"SMTP_HOST\",\n        \"REDIS_URL\"\n      ],\n      \"requiredHeaders\": [],\n      \"authSchemes\": [\n        \"HMAC-SHA256\",\n        \"Bearer JWT\",\n        \"JWT\"\n      ],\n      \"runtimeVersions\": [\n        \"18.0.0\"\n      ],\n      \"dbUrls\": [\n        \"postgres://localhost/orders\"\n      ],\n      \"rawText\": \"# OrderService\\n\\nA REST microservice for managing users and orders.\\n\\n## Getting Started\\n\\nThis service **runs on port 3000** (divergence: code actually uses 8080).\\n\\nAuthentication is handled via **HMAC-SHA256 webhook signatures** and **Bearer JWT** for user routes.\\n\\n### Environment Variables\\n\\n| Variable       | Description                       |\\n|----------------|-----------------------------------|\\n| `JWT_SECRET`   | JWT signing key (required)        |\\n| `DATABASE_URL` | PostgreSQL connection string      |\\n| `SMTP_HOST`    | Email relay host (notifications)  |\\n\\n> **Note**: `REDIS_URL` is NOT listed here, but the code reads it at runtime (undeclared env var drift).\\n\\n### Routes\\n\\n| Method | Path                  | Auth          | Description           |\\n|--------|-----------------------|---------------|-----------------------|\\n| GET    | `/api/users`          | Bearer JWT    | List all users        |\\n| POST   | `/api/users`          | Bearer JWT    | Create user           |\\n| GET    | `/api/orders`         | Bearer JWT    | List orders           |\\n| POST   | `/api/orders`         | Bearer JWT    | Create order          |\\n| POST   | `/api/webhook/github` | HMAC-SHA256   | GitHub event webhook  |\\n\\n### Setup\\n\\n```bash\\nexport JWT_SECRET=supersecret\\nexport DATABASE_URL=postgres://localhost/orders\\nnpm install\\nnpm start\\n```\\n\\n### Node.js Version\\n\\nRequires Node.js >= 18.0.0.\\n\"\n    }\n  ],\n  \"openApiClaims\": [\n    {\n      \"sourceFile\": \"docs\\\\openapi.yaml\",\n      \"sourceKind\": \"openapi\",\n      \"title\": \"OrderService API\",\n      \"version\": \"1.0.0\",\n      \"portBindings\": [\n        \"3000\"\n      ],\n      \"envVars\": [],\n      \"requiredHeaders\": [],\n      \"authSchemes\": [\n        \"http\",\n        \"bearer\",\n        \"JWT\"\n      ],\n      \"routes\": [\n        {\n          \"path\": \"/users\",\n          \"method\": \"GET\"\n        },\n        {\n          \"path\": \"/orders\",\n          \"method\": \"GET\"\n        },\n        {\n          \"path\": \"/orders\",\n          \"method\": \"POST\"\n        }\n      ],\n      \"rawText\": \"openapi: \\\"3.0.0\\\"\\ninfo:\\n  title: OrderService API\\n  version: \\\"1.0.0\\\"\\n  description: REST API for managing users and orders.\\nservers:\\n  - url: http://localhost:3000/api\\n    description: Local development server (drift: code uses 8080)\\npaths:\\n  /users:\\n    get:\\n      summary: List all users\\n      security:\\n        - bearerAuth: []\\n      responses:\\n        \\\"200\\\":\\n          description: User list\\n  /orders:\\n    get:\\n      summary: List orders for authenticated user\\n      security:\\n        - bearerAuth: []\\n      responses:\\n        \\\"200\\\":\\n          description: Order list\\n    post:\\n      summary: Create a new order\\n      security:\\n        - bearerAuth: []\\n      responses:\\n        \\\"201\\\":\\n          description: Created order\\n  # NOTE: POST /users and POST /api/webhook/github are deliberately omitted\\n  # to create ROUTE_UNDOCUMENTED drift records.\\ncomponents:\\n  securitySchemes:\\n    bearerAuth:\\n      type: http\\n      scheme: bearer\\n      bearerFormat: JWT\\n\"\n    }\n  ],\n  \"codeClaims\": [\n    {\n      \"sourceFile\": \"index.js\",\n      \"portBindings\": [\n        \"8080\"\n      ],\n      \"envVars\": [\n        \"PORT\"\n      ],\n      \"requiredHeaders\": [],\n      \"authSchemes\": []\n    },\n    {\n      \"sourceFile\": \"src\\\\controllers\\\\ordersController.js\",\n      \"portBindings\": [],\n      \"envVars\": [\n        \"DATABASE_URL\"\n      ],\n      \"requiredHeaders\": [],\n      \"authSchemes\": []\n    },\n    {\n      \"sourceFile\": \"src\\\\controllers\\\\usersController.js\",\n      \"portBindings\": [],\n      \"envVars\": [\n        \"JWT_SECRET\",\n        \"DATABASE_URL\",\n        \"REDIS_URL\"\n      ],\n      \"requiredHeaders\": [\n        \"authorization\"\n      ],\n      \"authSchemes\": [\n        \"Bearer\",\n        \"jwt.verify\"\n      ]\n    },\n    {\n      \"sourceFile\": \"src\\\\db\\\\pool.js\",\n      \"portBindings\": [],\n      \"envVars\": [],\n      \"requiredHeaders\": [],\n      \"authSchemes\": []\n    },\n    {\n      \"sourceFile\": \"src\\\\routes\\\\orders.js\",\n      \"portBindings\": [],\n      \"envVars\": [],\n      \"requiredHeaders\": [],\n      \"authSchemes\": []\n    },\n    {\n      \"sourceFile\": \"src\\\\routes\\\\users.js\",\n      \"portBindings\": [],\n      \"envVars\": [],\n      \"requiredHeaders\": [],\n      \"authSchemes\": []\n    },\n    {\n      \"sourceFile\": \"src\\\\routes\\\\webhook.js\",\n      \"portBindings\": [],\n      \"envVars\": [\n        \"WEBHOOK_SECRET\"\n      ],\n      \"requiredHeaders\": [],\n      \"authSchemes\": [\n        \"HMAC\",\n        \"hmac\"\n      ]\n    }\n  ],\n  \"aggregated\": {\n    \"allPorts\": [\n      \"3000\"\n    ],\n    \"allEnvVars\": [\n      \"JWT_SECRET\",\n      \"DATABASE_URL\",\n      \"SMTP_HOST\",\n      \"REDIS_URL\"\n    ],\n    \"allHeaders\": [],\n    \"allAuthSchemes\": [\n      \"HMAC-SHA256\",\n      \"Bearer JWT\",\n      \"JWT\",\n      \"http\",\n      \"bearer\"\n    ],\n    \"allRoutes\": [\n      {\n        \"path\": \"/users\",\n        \"method\": \"GET\",\n        \"sourceFile\": \"docs\\\\openapi.yaml\"\n      },\n      {\n        \"path\": \"/orders\",\n        \"method\": \"GET\",\n        \"sourceFile\": \"docs\\\\openapi.yaml\"\n      },\n      {\n        \"path\": \"/orders\",\n        \"method\": \"POST\",\n        \"sourceFile\": \"docs\\\\openapi.yaml\"\n      }\n    ],\n    \"runtimeVersions\": [\n      \"18.0.0\"\n    ]\n  }\n}"
+    },
+    {
+      "sourceFile": "docs\\openapi.yaml",
+      "sourceKind": "openapi",
+      "title": "OrderService API",
+      "version": "1.0.0",
+      "portBindings": [
+        "3000"
+      ],
+      "envVars": [],
+      "requiredHeaders": [],
+      "authSchemes": [
+        "http",
+        "bearer",
+        "JWT"
+      ],
+      "routes": [
+        {
+          "path": "/users",
+          "method": "GET"
+        },
+        {
+          "path": "/orders",
+          "method": "GET"
+        },
+        {
+          "path": "/orders",
+          "method": "POST"
+        }
+      ],
+      "rawText": "openapi: \"3.0.0\"\ninfo:\n  title: OrderService API\n  version: \"1.0.0\"\n  description: REST API for managing users and orders.\nservers:\n  - url: http://localhost:3000/api\n    description: Local development server (drift: code uses 8080)\npaths:\n  /users:\n    get:\n      summary: List all users\n      security:\n        - bearerAuth: []\n      responses:\n        \"200\":\n          description: User list\n  /orders:\n    get:\n      summary: List orders for authenticated user\n      security:\n        - bearerAuth: []\n      responses:\n        \"200\":\n          description: Order list\n    post:\n      summary: Create a new order\n      security:\n        - bearerAuth: []\n      responses:\n        \"201\":\n          description: Created order\n  # NOTE: POST /users and POST /api/webhook/github are deliberately omitted\n  # to create ROUTE_UNDOCUMENTED drift records.\ncomponents:\n  securitySchemes:\n    bearerAuth:\n      type: http\n      scheme: bearer\n      bearerFormat: JWT\n"
+    }
+  ],
+  "codeClaims": [
+    {
+      "sourceFile": ".mse-final\\cegis-antigens\\DRIFT-EVU-002.antigen.test.js",
+      "portBindings": [],
+      "envVars": [],
+      "requiredHeaders": [],
+      "authSchemes": []
+    },
+    {
+      "sourceFile": ".mse-final\\cegis-antigens\\DRIFT-EVU-003.antigen.test.js",
+      "portBindings": [],
+      "envVars": [],
+      "requiredHeaders": [],
+      "authSchemes": []
+    },
+    {
+      "sourceFile": ".mse-final\\cegis-antigens\\DRIFT-HU-005.antigen.test.js",
+      "portBindings": [],
+      "envVars": [],
+      "requiredHeaders": [],
+      "authSchemes": []
+    },
+    {
+      "sourceFile": ".mse-final\\cegis-antigens\\DRIFT-PM-001.antigen.test.js",
+      "portBindings": [],
+      "envVars": [],
+      "requiredHeaders": [],
+      "authSchemes": []
+    },
+    {
+      "sourceFile": ".mse-final\\cegis-antigens\\DRIFT-RU-006.antigen.test.js",
+      "portBindings": [],
+      "envVars": [],
+      "requiredHeaders": [],
+      "authSchemes": []
+    },
+    {
+      "sourceFile": ".mse-final\\cegis-antigens\\DRIFT-RU-007.antigen.test.js",
+      "portBindings": [],
+      "envVars": [],
+      "requiredHeaders": [],
+      "authSchemes": []
+    },
+    {
+      "sourceFile": ".mse-final\\cegis-antigens\\INV-001.antigen.test.js",
+      "portBindings": [],
+      "envVars": [],
+      "requiredHeaders": [
+        "authorization"
+      ],
+      "authSchemes": [
+        "Bearer"
+      ]
+    },
+    {
+      "sourceFile": ".mse-final\\pr\\antigens\\DRIFT-EVU-002.antigen.test.js",
+      "portBindings": [],
+      "envVars": [],
+      "requiredHeaders": [],
+      "authSchemes": []
+    },
+    {
+      "sourceFile": ".mse-final\\pr\\antigens\\DRIFT-EVU-003.antigen.test.js",
+      "portBindings": [],
+      "envVars": [],
+      "requiredHeaders": [],
+      "authSchemes": []
+    },
+    {
+      "sourceFile": ".mse-final\\pr\\antigens\\DRIFT-HU-005.antigen.test.js",
+      "portBindings": [],
+      "envVars": [],
+      "requiredHeaders": [],
+      "authSchemes": []
+    },
+    {
+      "sourceFile": ".mse-final\\pr\\antigens\\DRIFT-PM-001.antigen.test.js",
+      "portBindings": [],
+      "envVars": [],
+      "requiredHeaders": [],
+      "authSchemes": []
+    },
+    {
+      "sourceFile": ".mse-final\\pr\\antigens\\DRIFT-RU-006.antigen.test.js",
+      "portBindings": [],
+      "envVars": [],
+      "requiredHeaders": [],
+      "authSchemes": []
+    },
+    {
+      "sourceFile": ".mse-final\\pr\\antigens\\DRIFT-RU-007.antigen.test.js",
+      "portBindings": [],
+      "envVars": [],
+      "requiredHeaders": [],
+      "authSchemes": []
+    },
+    {
+      "sourceFile": ".mse-final\\pr\\antigens\\INV-001.antigen.test.js",
+      "portBindings": [],
+      "envVars": [],
+      "requiredHeaders": [
+        "authorization"
+      ],
+      "authSchemes": [
+        "Bearer"
+      ]
+    },
+    {
+      "sourceFile": "index.js",
+      "portBindings": [
+        "8080"
+      ],
+      "envVars": [
+        "PORT"
+      ],
+      "requiredHeaders": [],
+      "authSchemes": []
+    },
+    {
+      "sourceFile": "src\\controllers\\ordersController.js",
+      "portBindings": [],
+      "envVars": [
+        "DATABASE_URL"
+      ],
+      "requiredHeaders": [],
+      "authSchemes": []
+    },
+    {
+      "sourceFile": "src\\controllers\\usersController.js",
+      "portBindings": [],
+      "envVars": [
+        "JWT_SECRET",
+        "DATABASE_URL",
+        "REDIS_URL"
+      ],
+      "requiredHeaders": [
+        "authorization"
+      ],
+      "authSchemes": [
+        "Bearer",
+        "jwt.verify"
+      ]
+    },
+    {
+      "sourceFile": "src\\db\\pool.js",
+      "portBindings": [],
+      "envVars": [],
+      "requiredHeaders": [],
+      "authSchemes": []
+    },
+    {
+      "sourceFile": "src\\routes\\orders.js",
+      "portBindings": [],
+      "envVars": [],
+      "requiredHeaders": [],
+      "authSchemes": []
+    },
+    {
+      "sourceFile": "src\\routes\\users.js",
+      "portBindings": [],
+      "envVars": [],
+      "requiredHeaders": [],
+      "authSchemes": []
+    },
+    {
+      "sourceFile": "src\\routes\\webhook.js",
+      "portBindings": [],
+      "envVars": [
+        "WEBHOOK_SECRET"
+      ],
+      "requiredHeaders": [],
+      "authSchemes": [
+        "HMAC",
+        "hmac"
+      ]
+    }
+  ],
+  "aggregated": {
+    "allPorts": [
+      "3000"
+    ],
+    "allEnvVars": [
+      "DOCUMENTATION_UPDATE",
+      "SYNC_IO_TO_ASYNC",
+      "AUTH_GUARD_INSERTION",
+      "JWT_SECRET",
+      "DATABASE_URL",
+      "SMTP_HOST",
+      "REDIS_URL"
+    ],
+    "allHeaders": [],
+    "allAuthSchemes": [
+      "Bearer",
+      "HMAC-SHA256",
+      "Bearer JWT",
+      "JWT",
+      "http",
+      "bearer"
+    ],
+    "allRoutes": [
+      {
+        "path": "/users",
+        "method": "GET",
+        "sourceFile": "docs\\openapi.yaml"
+      },
+      {
+        "path": "/orders",
+        "method": "GET",
+        "sourceFile": "docs\\openapi.yaml"
+      },
+      {
+        "path": "/orders",
+        "method": "POST",
+        "sourceFile": "docs\\openapi.yaml"
+      }
+    ],
+    "runtimeVersions": [
+      "18.0.0"
+    ]
+  }
+}

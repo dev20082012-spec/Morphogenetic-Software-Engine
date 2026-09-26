@@ -1,0 +1,2423 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-09-26T13:21:51.527Z",
+  "repositoryRoot": "C:\\Users\\omen\\Morphogenetic Software Engine\\test\\fixtures\\target_repo",
+  "summary": {
+    "totalFilesScanned": 21,
+    "entryPointCount": 1,
+    "routeCount": 6,
+    "asyncBoundaryCount": 130,
+    "stateMutationCount": 272,
+    "invariantViolations": 1,
+    "criticalViolations": 1
+  },
+  "entryPoints": [
+    "index.js"
+  ],
+  "routeManifest": [
+    {
+      "file": "index.js",
+      "lineNumber": 22,
+      "excerpt": "app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'order-service' }));",
+      "method": "GET"
+    },
+    {
+      "file": "src\\routes\\orders.js",
+      "lineNumber": 11,
+      "excerpt": "ordersRouter.get('/',  requireAuth, listOrders);",
+      "method": "GET"
+    },
+    {
+      "file": "src\\routes\\orders.js",
+      "lineNumber": 12,
+      "excerpt": "ordersRouter.post('/', requireAuth, createOrder);",
+      "method": "POST"
+    },
+    {
+      "file": "src\\routes\\users.js",
+      "lineNumber": 10,
+      "excerpt": "usersRouter.get('/',  requireAuth, listUsers);",
+      "method": "GET"
+    },
+    {
+      "file": "src\\routes\\users.js",
+      "lineNumber": 11,
+      "excerpt": "usersRouter.post('/', requireAuth, createUser);",
+      "method": "POST"
+    },
+    {
+      "file": "src\\routes\\webhook.js",
+      "lineNumber": 27,
+      "excerpt": "webhookRouter.post('/github', async (req, res) => {",
+      "method": "POST"
+    }
+  ],
+  "componentTopology": [
+    {
+      "path": ".mse-final\\cegis-antigens\\DRIFT-EVU-002.antigen.test.js",
+      "isEntryPoint": false,
+      "lineCount": 52,
+      "exports": [],
+      "dependencies": [],
+      "routes": [],
+      "asyncBoundaries": [
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 20,
+          "excerpt": "// Blocking: simulates readFileSync / CPU spin"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 28,
+          "excerpt": "await concurrentOp();"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 42,
+          "excerpt": "await Promise.resolve(); // yields to event loop"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "stateMutations": [
+        {
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-EVU-002 -- Code reads env var \\'PORT\\' which is not declared in documentation.', () => {"
+        },
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 18,
+          "excerpt": "const syncHandler = () => {"
+        },
+        {
+          "lineNumber": 19,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 21,
+          "excerpt": "for (let i = 0; i < 1000; i++) { /* spin */ }"
+        },
+        {
+          "lineNumber": 22,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 33,
+          "excerpt": "const bIndex = order.indexOf('B');"
+        },
+        {
+          "lineNumber": 34,
+          "excerpt": "const aEnd   = order.indexOf('A:end');"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 39,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 41,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 43,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": []
+      }
+    },
+    {
+      "path": ".mse-final\\cegis-antigens\\DRIFT-EVU-003.antigen.test.js",
+      "isEntryPoint": false,
+      "lineCount": 52,
+      "exports": [],
+      "dependencies": [],
+      "routes": [],
+      "asyncBoundaries": [
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 20,
+          "excerpt": "// Blocking: simulates readFileSync / CPU spin"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 28,
+          "excerpt": "await concurrentOp();"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 42,
+          "excerpt": "await Promise.resolve(); // yields to event loop"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "stateMutations": [
+        {
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-EVU-003 -- Code reads env var \\'WEBHOOK_SECRET\\' which is not declared in documentation.', () => {"
+        },
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 18,
+          "excerpt": "const syncHandler = () => {"
+        },
+        {
+          "lineNumber": 19,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 21,
+          "excerpt": "for (let i = 0; i < 1000; i++) { /* spin */ }"
+        },
+        {
+          "lineNumber": 22,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 33,
+          "excerpt": "const bIndex = order.indexOf('B');"
+        },
+        {
+          "lineNumber": 34,
+          "excerpt": "const aEnd   = order.indexOf('A:end');"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 39,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 41,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 43,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": []
+      }
+    },
+    {
+      "path": ".mse-final\\cegis-antigens\\DRIFT-HU-005.antigen.test.js",
+      "isEntryPoint": false,
+      "lineCount": 52,
+      "exports": [],
+      "dependencies": [],
+      "routes": [],
+      "asyncBoundaries": [
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 20,
+          "excerpt": "// Blocking: simulates readFileSync / CPU spin"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 28,
+          "excerpt": "await concurrentOp();"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 42,
+          "excerpt": "await Promise.resolve(); // yields to event loop"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "stateMutations": [
+        {
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-HU-005 -- Code requires header \\'authorization\\' which is absent from all documentation.', () => {"
+        },
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 18,
+          "excerpt": "const syncHandler = () => {"
+        },
+        {
+          "lineNumber": 19,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 21,
+          "excerpt": "for (let i = 0; i < 1000; i++) { /* spin */ }"
+        },
+        {
+          "lineNumber": 22,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 33,
+          "excerpt": "const bIndex = order.indexOf('B');"
+        },
+        {
+          "lineNumber": 34,
+          "excerpt": "const aEnd   = order.indexOf('A:end');"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 39,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 41,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 43,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": []
+      }
+    },
+    {
+      "path": ".mse-final\\cegis-antigens\\DRIFT-PM-001.antigen.test.js",
+      "isEntryPoint": false,
+      "lineCount": 52,
+      "exports": [],
+      "dependencies": [],
+      "routes": [],
+      "asyncBoundaries": [
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 20,
+          "excerpt": "// Blocking: simulates readFileSync / CPU spin"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 28,
+          "excerpt": "await concurrentOp();"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 42,
+          "excerpt": "await Promise.resolve(); // yields to event loop"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "stateMutations": [
+        {
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-PM-001 -- Documentation claims port 3000 but code binds to: 8080.', () => {"
+        },
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 18,
+          "excerpt": "const syncHandler = () => {"
+        },
+        {
+          "lineNumber": 19,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 21,
+          "excerpt": "for (let i = 0; i < 1000; i++) { /* spin */ }"
+        },
+        {
+          "lineNumber": 22,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 33,
+          "excerpt": "const bIndex = order.indexOf('B');"
+        },
+        {
+          "lineNumber": 34,
+          "excerpt": "const aEnd   = order.indexOf('A:end');"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 39,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 41,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 43,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": []
+      }
+    },
+    {
+      "path": ".mse-final\\cegis-antigens\\DRIFT-RU-006.antigen.test.js",
+      "isEntryPoint": false,
+      "lineCount": 52,
+      "exports": [],
+      "dependencies": [],
+      "routes": [],
+      "asyncBoundaries": [
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 20,
+          "excerpt": "// Blocking: simulates readFileSync / CPU spin"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 28,
+          "excerpt": "await concurrentOp();"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 42,
+          "excerpt": "await Promise.resolve(); // yields to event loop"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "stateMutations": [
+        {
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-RU-006 -- Route GET:/health exists in code (index.js) but is absent from all OpenAPI specs.', () => {"
+        },
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 18,
+          "excerpt": "const syncHandler = () => {"
+        },
+        {
+          "lineNumber": 19,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 21,
+          "excerpt": "for (let i = 0; i < 1000; i++) { /* spin */ }"
+        },
+        {
+          "lineNumber": 22,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 33,
+          "excerpt": "const bIndex = order.indexOf('B');"
+        },
+        {
+          "lineNumber": 34,
+          "excerpt": "const aEnd   = order.indexOf('A:end');"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 39,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 41,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 43,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": []
+      }
+    },
+    {
+      "path": ".mse-final\\cegis-antigens\\DRIFT-RU-007.antigen.test.js",
+      "isEntryPoint": false,
+      "lineCount": 52,
+      "exports": [],
+      "dependencies": [],
+      "routes": [],
+      "asyncBoundaries": [
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 20,
+          "excerpt": "// Blocking: simulates readFileSync / CPU spin"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 28,
+          "excerpt": "await concurrentOp();"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 42,
+          "excerpt": "await Promise.resolve(); // yields to event loop"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "stateMutations": [
+        {
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-RU-007 -- Route POST:/github exists in code (src\\routes\\webhook.js) but is absent from all OpenAPI specs"
+        },
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 18,
+          "excerpt": "const syncHandler = () => {"
+        },
+        {
+          "lineNumber": 19,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 21,
+          "excerpt": "for (let i = 0; i < 1000; i++) { /* spin */ }"
+        },
+        {
+          "lineNumber": 22,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 33,
+          "excerpt": "const bIndex = order.indexOf('B');"
+        },
+        {
+          "lineNumber": 34,
+          "excerpt": "const aEnd   = order.indexOf('A:end');"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 39,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 41,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 43,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": []
+      }
+    },
+    {
+      "path": ".mse-final\\cegis-antigens\\INV-001.antigen.test.js",
+      "isEntryPoint": false,
+      "lineCount": 54,
+      "exports": [
+        "pool"
+      ],
+      "dependencies": [],
+      "routes": [],
+      "asyncBoundaries": [
+        {
+          "lineNumber": 21,
+          "excerpt": "it('RED: must reject state mutation when Authorization header is absent', async () => {"
+        }
+      ],
+      "stateMutations": [
+        {
+          "lineNumber": 12,
+          "excerpt": "describe('INV-001 -- Unguarded Async State Mutation', () => {"
+        },
+        {
+          "lineNumber": 16,
+          "excerpt": "beforeEach(() => {"
+        },
+        {
+          "lineNumber": 17,
+          "excerpt": "state = { mutated: false, value: 0 };"
+        },
+        {
+          "lineNumber": 18,
+          "excerpt": "req   = { headers: {}, user: null }; // no auth injected"
+        },
+        {
+          "lineNumber": 21,
+          "excerpt": "it('RED: must reject state mutation when Authorization header is absent', async () => {"
+        },
+        {
+          "lineNumber": 22,
+          "excerpt": "// Reproduces: export const pool = { (line 8 in src\\db\\pool.js)"
+        },
+        {
+          "lineNumber": 24,
+          "excerpt": "const guardedWrite = (request, s) => {"
+        },
+        {
+          "lineNumber": 28,
+          "excerpt": "s.value  += 1;"
+        },
+        {
+          "lineNumber": 29,
+          "excerpt": "s.mutated = true;"
+        },
+        {
+          "lineNumber": 34,
+          "excerpt": "expect(() => guardedWrite(req, state)).toThrow('Unauthorized');"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: allows mutation when valid token is present', () => {"
+        },
+        {
+          "lineNumber": 39,
+          "excerpt": "req.headers['authorization'] = 'Bearer valid-token';"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "req.user = { id: 'u1', roles: ['write'] };"
+        },
+        {
+          "lineNumber": 42,
+          "excerpt": "const guardedWrite = (request, s) => {"
+        },
+        {
+          "lineNumber": 46,
+          "excerpt": "s.value  += 1;"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "s.mutated = true;"
+        },
+        {
+          "lineNumber": 50,
+          "excerpt": "expect(() => guardedWrite(req, state)).not.toThrow();"
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": [
+          {
+            "lineNumber": 23,
+            "excerpt": "// Precondition: req.user is null, no token is present"
+          },
+          {
+            "lineNumber": 40,
+            "excerpt": "req.user = { id: 'u1', roles: ['write'] };"
+          }
+        ]
+      }
+    },
+    {
+      "path": ".mse-final\\pr\\antigens\\DRIFT-EVU-002.antigen.test.js",
+      "isEntryPoint": false,
+      "lineCount": 52,
+      "exports": [],
+      "dependencies": [],
+      "routes": [],
+      "asyncBoundaries": [
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 20,
+          "excerpt": "// Blocking: simulates readFileSync / CPU spin"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 28,
+          "excerpt": "await concurrentOp();"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 42,
+          "excerpt": "await Promise.resolve(); // yields to event loop"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "stateMutations": [
+        {
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-EVU-002 -- Code reads env var \\'PORT\\' which is not declared in documentation.', () => {"
+        },
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 18,
+          "excerpt": "const syncHandler = () => {"
+        },
+        {
+          "lineNumber": 19,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 21,
+          "excerpt": "for (let i = 0; i < 1000; i++) { /* spin */ }"
+        },
+        {
+          "lineNumber": 22,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 33,
+          "excerpt": "const bIndex = order.indexOf('B');"
+        },
+        {
+          "lineNumber": 34,
+          "excerpt": "const aEnd   = order.indexOf('A:end');"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 39,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 41,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 43,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": []
+      }
+    },
+    {
+      "path": ".mse-final\\pr\\antigens\\DRIFT-EVU-003.antigen.test.js",
+      "isEntryPoint": false,
+      "lineCount": 52,
+      "exports": [],
+      "dependencies": [],
+      "routes": [],
+      "asyncBoundaries": [
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 20,
+          "excerpt": "// Blocking: simulates readFileSync / CPU spin"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 28,
+          "excerpt": "await concurrentOp();"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 42,
+          "excerpt": "await Promise.resolve(); // yields to event loop"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "stateMutations": [
+        {
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-EVU-003 -- Code reads env var \\'WEBHOOK_SECRET\\' which is not declared in documentation.', () => {"
+        },
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 18,
+          "excerpt": "const syncHandler = () => {"
+        },
+        {
+          "lineNumber": 19,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 21,
+          "excerpt": "for (let i = 0; i < 1000; i++) { /* spin */ }"
+        },
+        {
+          "lineNumber": 22,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 33,
+          "excerpt": "const bIndex = order.indexOf('B');"
+        },
+        {
+          "lineNumber": 34,
+          "excerpt": "const aEnd   = order.indexOf('A:end');"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 39,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 41,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 43,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": []
+      }
+    },
+    {
+      "path": ".mse-final\\pr\\antigens\\DRIFT-HU-005.antigen.test.js",
+      "isEntryPoint": false,
+      "lineCount": 52,
+      "exports": [],
+      "dependencies": [],
+      "routes": [],
+      "asyncBoundaries": [
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 20,
+          "excerpt": "// Blocking: simulates readFileSync / CPU spin"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 28,
+          "excerpt": "await concurrentOp();"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 42,
+          "excerpt": "await Promise.resolve(); // yields to event loop"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "stateMutations": [
+        {
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-HU-005 -- Code requires header \\'authorization\\' which is absent from all documentation.', () => {"
+        },
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 18,
+          "excerpt": "const syncHandler = () => {"
+        },
+        {
+          "lineNumber": 19,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 21,
+          "excerpt": "for (let i = 0; i < 1000; i++) { /* spin */ }"
+        },
+        {
+          "lineNumber": 22,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 33,
+          "excerpt": "const bIndex = order.indexOf('B');"
+        },
+        {
+          "lineNumber": 34,
+          "excerpt": "const aEnd   = order.indexOf('A:end');"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 39,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 41,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 43,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": []
+      }
+    },
+    {
+      "path": ".mse-final\\pr\\antigens\\DRIFT-PM-001.antigen.test.js",
+      "isEntryPoint": false,
+      "lineCount": 52,
+      "exports": [],
+      "dependencies": [],
+      "routes": [],
+      "asyncBoundaries": [
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 20,
+          "excerpt": "// Blocking: simulates readFileSync / CPU spin"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 28,
+          "excerpt": "await concurrentOp();"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 42,
+          "excerpt": "await Promise.resolve(); // yields to event loop"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "stateMutations": [
+        {
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-PM-001 -- Documentation claims port 3000 but code binds to: 8080.', () => {"
+        },
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 18,
+          "excerpt": "const syncHandler = () => {"
+        },
+        {
+          "lineNumber": 19,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 21,
+          "excerpt": "for (let i = 0; i < 1000; i++) { /* spin */ }"
+        },
+        {
+          "lineNumber": 22,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 33,
+          "excerpt": "const bIndex = order.indexOf('B');"
+        },
+        {
+          "lineNumber": 34,
+          "excerpt": "const aEnd   = order.indexOf('A:end');"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 39,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 41,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 43,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": []
+      }
+    },
+    {
+      "path": ".mse-final\\pr\\antigens\\DRIFT-RU-006.antigen.test.js",
+      "isEntryPoint": false,
+      "lineCount": 52,
+      "exports": [],
+      "dependencies": [],
+      "routes": [],
+      "asyncBoundaries": [
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 20,
+          "excerpt": "// Blocking: simulates readFileSync / CPU spin"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 28,
+          "excerpt": "await concurrentOp();"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 42,
+          "excerpt": "await Promise.resolve(); // yields to event loop"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "stateMutations": [
+        {
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-RU-006 -- Route GET:/health exists in code (index.js) but is absent from all OpenAPI specs.', () => {"
+        },
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 18,
+          "excerpt": "const syncHandler = () => {"
+        },
+        {
+          "lineNumber": 19,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 21,
+          "excerpt": "for (let i = 0; i < 1000; i++) { /* spin */ }"
+        },
+        {
+          "lineNumber": 22,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 33,
+          "excerpt": "const bIndex = order.indexOf('B');"
+        },
+        {
+          "lineNumber": 34,
+          "excerpt": "const aEnd   = order.indexOf('A:end');"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 39,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 41,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 43,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": []
+      }
+    },
+    {
+      "path": ".mse-final\\pr\\antigens\\DRIFT-RU-007.antigen.test.js",
+      "isEntryPoint": false,
+      "lineCount": 52,
+      "exports": [],
+      "dependencies": [],
+      "routes": [],
+      "asyncBoundaries": [
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 20,
+          "excerpt": "// Blocking: simulates readFileSync / CPU spin"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 28,
+          "excerpt": "await concurrentOp();"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 42,
+          "excerpt": "await Promise.resolve(); // yields to event loop"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "stateMutations": [
+        {
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-RU-007 -- Route POST:/github exists in code (src\\routes\\webhook.js) but is absent from all OpenAPI specs"
+        },
+        {
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 18,
+          "excerpt": "const syncHandler = () => {"
+        },
+        {
+          "lineNumber": 19,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 21,
+          "excerpt": "for (let i = 0; i < 1000; i++) { /* spin */ }"
+        },
+        {
+          "lineNumber": 22,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 25,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 33,
+          "excerpt": "const bIndex = order.indexOf('B');"
+        },
+        {
+          "lineNumber": 34,
+          "excerpt": "const aEnd   = order.indexOf('A:end');"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: async handler allows B to interleave', async () => {"
+        },
+        {
+          "lineNumber": 39,
+          "excerpt": "const order = [];"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "const asyncHandler = async () => {"
+        },
+        {
+          "lineNumber": 41,
+          "excerpt": "order.push('A:start');"
+        },
+        {
+          "lineNumber": 43,
+          "excerpt": "order.push('A:end');"
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "const concurrentOp = async () => { order.push('B'); };"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "const [, ] = await Promise.all([asyncHandler(), concurrentOp()]);"
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": []
+      }
+    },
+    {
+      "path": ".mse-final\\pr\\antigens\\INV-001.antigen.test.js",
+      "isEntryPoint": false,
+      "lineCount": 54,
+      "exports": [
+        "pool"
+      ],
+      "dependencies": [],
+      "routes": [],
+      "asyncBoundaries": [
+        {
+          "lineNumber": 21,
+          "excerpt": "it('RED: must reject state mutation when Authorization header is absent', async () => {"
+        }
+      ],
+      "stateMutations": [
+        {
+          "lineNumber": 12,
+          "excerpt": "describe('INV-001 -- Unguarded Async State Mutation', () => {"
+        },
+        {
+          "lineNumber": 16,
+          "excerpt": "beforeEach(() => {"
+        },
+        {
+          "lineNumber": 17,
+          "excerpt": "state = { mutated: false, value: 0 };"
+        },
+        {
+          "lineNumber": 18,
+          "excerpt": "req   = { headers: {}, user: null }; // no auth injected"
+        },
+        {
+          "lineNumber": 21,
+          "excerpt": "it('RED: must reject state mutation when Authorization header is absent', async () => {"
+        },
+        {
+          "lineNumber": 22,
+          "excerpt": "// Reproduces: export const pool = { (line 8 in src\\db\\pool.js)"
+        },
+        {
+          "lineNumber": 24,
+          "excerpt": "const guardedWrite = (request, s) => {"
+        },
+        {
+          "lineNumber": 28,
+          "excerpt": "s.value  += 1;"
+        },
+        {
+          "lineNumber": 29,
+          "excerpt": "s.mutated = true;"
+        },
+        {
+          "lineNumber": 34,
+          "excerpt": "expect(() => guardedWrite(req, state)).toThrow('Unauthorized');"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "it('GREEN baseline: allows mutation when valid token is present', () => {"
+        },
+        {
+          "lineNumber": 39,
+          "excerpt": "req.headers['authorization'] = 'Bearer valid-token';"
+        },
+        {
+          "lineNumber": 40,
+          "excerpt": "req.user = { id: 'u1', roles: ['write'] };"
+        },
+        {
+          "lineNumber": 42,
+          "excerpt": "const guardedWrite = (request, s) => {"
+        },
+        {
+          "lineNumber": 46,
+          "excerpt": "s.value  += 1;"
+        },
+        {
+          "lineNumber": 47,
+          "excerpt": "s.mutated = true;"
+        },
+        {
+          "lineNumber": 50,
+          "excerpt": "expect(() => guardedWrite(req, state)).not.toThrow();"
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": [
+          {
+            "lineNumber": 23,
+            "excerpt": "// Precondition: req.user is null, no token is present"
+          },
+          {
+            "lineNumber": 40,
+            "excerpt": "req.user = { id: 'u1', roles: ['write'] };"
+          }
+        ]
+      }
+    },
+    {
+      "path": "index.js",
+      "isEntryPoint": true,
+      "lineCount": 29,
+      "exports": [],
+      "dependencies": [
+        "src\\routes\\users.js",
+        "src\\routes\\orders.js",
+        "src\\routes\\webhook.js"
+      ],
+      "routes": [
+        {
+          "lineNumber": 22,
+          "excerpt": "app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'order-service' }));",
+          "method": "GET"
+        }
+      ],
+      "asyncBoundaries": [],
+      "stateMutations": [
+        {
+          "lineNumber": 13,
+          "excerpt": "const app  = express();"
+        },
+        {
+          "lineNumber": 14,
+          "excerpt": "const PORT = process.env.PORT || 8080; // drift: README says 3000"
+        },
+        {
+          "lineNumber": 22,
+          "excerpt": "app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'order-service' }));"
+        },
+        {
+          "lineNumber": 24,
+          "excerpt": "const server = app.listen(PORT, () => {"
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": []
+      }
+    },
+    {
+      "path": "src\\controllers\\ordersController.js",
+      "isEntryPoint": false,
+      "lineCount": 55,
+      "exports": [],
+      "dependencies": [
+        "src\\db\\pool.js"
+      ],
+      "routes": [],
+      "asyncBoundaries": [
+        {
+          "lineNumber": 14,
+          "excerpt": "export async function listOrders(req, res) {"
+        },
+        {
+          "lineNumber": 16,
+          "excerpt": "const orders = await pool.query("
+        },
+        {
+          "lineNumber": 32,
+          "excerpt": "export async function createOrder(req, res) {"
+        },
+        {
+          "lineNumber": 33,
+          "excerpt": "const client = await pool.connect();"
+        },
+        {
+          "lineNumber": 35,
+          "excerpt": "await client.query('BEGIN');"
+        },
+        {
+          "lineNumber": 37,
+          "excerpt": "const order = await client.query("
+        },
+        {
+          "lineNumber": 41,
+          "excerpt": "await client.query("
+        },
+        {
+          "lineNumber": 45,
+          "excerpt": "await client.query('COMMIT');"
+        }
+      ],
+      "stateMutations": [
+        {
+          "lineNumber": 9,
+          "excerpt": "const DATABASE_URL = process.env.DATABASE_URL;"
+        },
+        {
+          "lineNumber": 16,
+          "excerpt": "const orders = await pool.query("
+        },
+        {
+          "lineNumber": 17,
+          "excerpt": "'SELECT * FROM orders WHERE user_id = $1',"
+        },
+        {
+          "lineNumber": 33,
+          "excerpt": "const client = await pool.connect();"
+        },
+        {
+          "lineNumber": 37,
+          "excerpt": "const order = await client.query("
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [
+          {
+            "lineNumber": 29,
+            "excerpt": "* INVARIANT (INV-003): All DB mutations must be wrapped in BEGIN/COMMIT/ROLLBACK."
+          },
+          {
+            "lineNumber": 30,
+            "excerpt": "* This implementation opens a transaction but lacks ROLLBACK on error -- DATA_INTEGRITY violation."
+          },
+          {
+            "lineNumber": 45,
+            "excerpt": "await client.query('COMMIT');"
+          },
+          {
+            "lineNumber": 48,
+            "excerpt": "// LATENT BUG: Missing ROLLBACK -- transaction left dangling on error."
+          },
+          {
+            "lineNumber": 49,
+            "excerpt": "client.release();"
+          },
+          {
+            "lineNumber": 52,
+            "excerpt": "client.release();"
+          }
+        ],
+        "transactionBoundaries": [
+          {
+            "lineNumber": 29,
+            "excerpt": "* INVARIANT (INV-003): All DB mutations must be wrapped in BEGIN/COMMIT/ROLLBACK."
+          },
+          {
+            "lineNumber": 30,
+            "excerpt": "* This implementation opens a transaction but lacks ROLLBACK on error -- DATA_INTEGRITY violation."
+          },
+          {
+            "lineNumber": 45,
+            "excerpt": "await client.query('COMMIT');"
+          },
+          {
+            "lineNumber": 48,
+            "excerpt": "// LATENT BUG: Missing ROLLBACK -- transaction left dangling on error."
+          }
+        ],
+        "tokenValidationSequences": [
+          {
+            "lineNumber": 18,
+            "excerpt": "[req.user.id]"
+          },
+          {
+            "lineNumber": 39,
+            "excerpt": "[req.user.id, req.body.items, req.body.total]"
+          }
+        ]
+      }
+    },
+    {
+      "path": "src\\controllers\\usersController.js",
+      "isEntryPoint": false,
+      "lineCount": 65,
+      "exports": [
+        "requireAuth"
+      ],
+      "dependencies": [],
+      "routes": [],
+      "asyncBoundaries": [
+        {
+          "lineNumber": 33,
+          "excerpt": "export async function listUsers(req, res) {"
+        },
+        {
+          "lineNumber": 36,
+          "excerpt": "const users = await simulateDbQuery(DATABASE_URL, 'SELECT * FROM users WHERE active = true');"
+        },
+        {
+          "lineNumber": 49,
+          "excerpt": "export async function createUser(req, res) {"
+        },
+        {
+          "lineNumber": 51,
+          "excerpt": "const user = await simulateDbQuery(DATABASE_URL, 'INSERT INTO users', req.body);"
+        },
+        {
+          "lineNumber": 59,
+          "excerpt": "async function simulateDbQuery(url, sql, params) {"
+        },
+        {
+          "lineNumber": 62,
+          "excerpt": "await new Promise(r => setTimeout(r, 1));"
+        }
+      ],
+      "stateMutations": [
+        {
+          "lineNumber": 9,
+          "excerpt": "const JWT_SECRET  = process.env.JWT_SECRET;"
+        },
+        {
+          "lineNumber": 10,
+          "excerpt": "const DATABASE_URL = process.env.DATABASE_URL;"
+        },
+        {
+          "lineNumber": 11,
+          "excerpt": "const REDIS_URL   = process.env.REDIS_URL; // not declared in README -- ENV_VAR_UNDECLARED drift"
+        },
+        {
+          "lineNumber": 17,
+          "excerpt": "const authHeader = req.headers['authorization'];"
+        },
+        {
+          "lineNumber": 22,
+          "excerpt": "const token = authHeader.slice(7);"
+        },
+        {
+          "lineNumber": 23,
+          "excerpt": "req.user = jwt.verify(token, JWT_SECRET);"
+        },
+        {
+          "lineNumber": 36,
+          "excerpt": "const users = await simulateDbQuery(DATABASE_URL, 'SELECT * FROM users WHERE active = true');"
+        },
+        {
+          "lineNumber": 51,
+          "excerpt": "const user = await simulateDbQuery(DATABASE_URL, 'INSERT INTO users', req.body);"
+        },
+        {
+          "lineNumber": 62,
+          "excerpt": "await new Promise(r => setTimeout(r, 1));"
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": [
+          {
+            "lineNumber": 23,
+            "excerpt": "req.user = jwt.verify(token, JWT_SECRET);"
+          }
+        ]
+      }
+    },
+    {
+      "path": "src\\db\\pool.js",
+      "isEntryPoint": false,
+      "lineCount": 26,
+      "exports": [
+        "pool"
+      ],
+      "dependencies": [],
+      "routes": [],
+      "asyncBoundaries": [
+        {
+          "lineNumber": 10,
+          "excerpt": "await new Promise(r => setTimeout(r, 1));"
+        },
+        {
+          "lineNumber": 17,
+          "excerpt": "await new Promise(r => setTimeout(r, 1));"
+        }
+      ],
+      "stateMutations": [
+        {
+          "lineNumber": 8,
+          "excerpt": "export const pool = {"
+        },
+        {
+          "lineNumber": 10,
+          "excerpt": "await new Promise(r => setTimeout(r, 1));"
+        },
+        {
+          "lineNumber": 14,
+          "excerpt": "let released = false;"
+        },
+        {
+          "lineNumber": 17,
+          "excerpt": "await new Promise(r => setTimeout(r, 1));"
+        },
+        {
+          "lineNumber": 21,
+          "excerpt": "released = true;"
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": []
+      }
+    },
+    {
+      "path": "src\\routes\\orders.js",
+      "isEntryPoint": false,
+      "lineCount": 13,
+      "exports": [
+        "ordersRouter"
+      ],
+      "dependencies": [
+        "src\\controllers\\usersController.js",
+        "src\\controllers\\ordersController.js"
+      ],
+      "routes": [
+        {
+          "lineNumber": 11,
+          "excerpt": "ordersRouter.get('/',  requireAuth, listOrders);",
+          "method": "GET"
+        },
+        {
+          "lineNumber": 12,
+          "excerpt": "ordersRouter.post('/', requireAuth, createOrder);",
+          "method": "POST"
+        }
+      ],
+      "asyncBoundaries": [],
+      "stateMutations": [
+        {
+          "lineNumber": 9,
+          "excerpt": "export const ordersRouter = express.Router();"
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": []
+      }
+    },
+    {
+      "path": "src\\routes\\users.js",
+      "isEntryPoint": false,
+      "lineCount": 12,
+      "exports": [
+        "usersRouter"
+      ],
+      "dependencies": [
+        "src\\controllers\\usersController.js"
+      ],
+      "routes": [
+        {
+          "lineNumber": 10,
+          "excerpt": "usersRouter.get('/',  requireAuth, listUsers);",
+          "method": "GET"
+        },
+        {
+          "lineNumber": 11,
+          "excerpt": "usersRouter.post('/', requireAuth, createUser);",
+          "method": "POST"
+        }
+      ],
+      "asyncBoundaries": [],
+      "stateMutations": [
+        {
+          "lineNumber": 8,
+          "excerpt": "export const usersRouter = express.Router();"
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": []
+      }
+    },
+    {
+      "path": "src\\routes\\webhook.js",
+      "isEntryPoint": false,
+      "lineCount": 58,
+      "exports": [
+        "webhookRouter"
+      ],
+      "dependencies": [],
+      "routes": [
+        {
+          "lineNumber": 27,
+          "excerpt": "webhookRouter.post('/github', async (req, res) => {",
+          "method": "POST"
+        }
+      ],
+      "asyncBoundaries": [
+        {
+          "lineNumber": 27,
+          "excerpt": "webhookRouter.post('/github', async (req, res) => {"
+        },
+        {
+          "lineNumber": 42,
+          "excerpt": "await processGitHubEvent(event, payload);"
+        },
+        {
+          "lineNumber": 53,
+          "excerpt": "async function processGitHubEvent(event, payload) {"
+        },
+        {
+          "lineNumber": 55,
+          "excerpt": "await new Promise(r => setTimeout(r, 1));"
+        }
+      ],
+      "stateMutations": [
+        {
+          "lineNumber": 15,
+          "excerpt": "export const webhookRouter = express.Router();"
+        },
+        {
+          "lineNumber": 27,
+          "excerpt": "webhookRouter.post('/github', async (req, res) => {"
+        },
+        {
+          "lineNumber": 30,
+          "excerpt": "//   const sig256 = req.headers['x-hub-signature-256'];"
+        },
+        {
+          "lineNumber": 31,
+          "excerpt": "//   const hmac   = crypto.createHmac('sha256', process.env.WEBHOOK_SECRET);"
+        },
+        {
+          "lineNumber": 32,
+          "excerpt": "//   hmac.update(rawBody);"
+        },
+        {
+          "lineNumber": 33,
+          "excerpt": "//   const expected = 'sha256=' + hmac.digest('hex');"
+        },
+        {
+          "lineNumber": 38,
+          "excerpt": "const event   = req.headers['x-github-event'] || 'unknown';"
+        },
+        {
+          "lineNumber": 39,
+          "excerpt": "const payload = req.body;"
+        },
+        {
+          "lineNumber": 55,
+          "excerpt": "await new Promise(r => setTimeout(r, 1));"
+        }
+      ],
+      "latentInvariants": {
+        "mutexLifecycles": [],
+        "transactionBoundaries": [],
+        "tokenValidationSequences": []
+      }
+    }
+  ],
+  "dependencyGraph": {
+    ".mse-final\\cegis-antigens\\DRIFT-EVU-002.antigen.test.js": [],
+    ".mse-final\\cegis-antigens\\DRIFT-EVU-003.antigen.test.js": [],
+    ".mse-final\\cegis-antigens\\DRIFT-HU-005.antigen.test.js": [],
+    ".mse-final\\cegis-antigens\\DRIFT-PM-001.antigen.test.js": [],
+    ".mse-final\\cegis-antigens\\DRIFT-RU-006.antigen.test.js": [],
+    ".mse-final\\cegis-antigens\\DRIFT-RU-007.antigen.test.js": [],
+    ".mse-final\\cegis-antigens\\INV-001.antigen.test.js": [],
+    ".mse-final\\pr\\antigens\\DRIFT-EVU-002.antigen.test.js": [],
+    ".mse-final\\pr\\antigens\\DRIFT-EVU-003.antigen.test.js": [],
+    ".mse-final\\pr\\antigens\\DRIFT-HU-005.antigen.test.js": [],
+    ".mse-final\\pr\\antigens\\DRIFT-PM-001.antigen.test.js": [],
+    ".mse-final\\pr\\antigens\\DRIFT-RU-006.antigen.test.js": [],
+    ".mse-final\\pr\\antigens\\DRIFT-RU-007.antigen.test.js": [],
+    ".mse-final\\pr\\antigens\\INV-001.antigen.test.js": [],
+    "index.js": [
+      "src\\routes\\users.js",
+      "src\\routes\\orders.js",
+      "src\\routes\\webhook.js"
+    ],
+    "src\\controllers\\ordersController.js": [
+      "src\\db\\pool.js"
+    ],
+    "src\\controllers\\usersController.js": [],
+    "src\\db\\pool.js": [],
+    "src\\routes\\orders.js": [
+      "src\\controllers\\usersController.js",
+      "src\\controllers\\ordersController.js"
+    ],
+    "src\\routes\\users.js": [
+      "src\\controllers\\usersController.js"
+    ],
+    "src\\routes\\webhook.js": []
+  },
+  "discoveredInvariants": [
+    {
+      "id": "INV-001",
+      "type": "SECURITY",
+      "name": "Unguarded Async State Mutation",
+      "description": "Files containing both async boundaries and state mutations with no token validation in scope violate the authentication-before-write invariant.",
+      "severity": "CRITICAL",
+      "affectedFiles": [
+        ".mse-final\\cegis-antigens\\DRIFT-EVU-002.antigen.test.js",
+        ".mse-final\\cegis-antigens\\DRIFT-EVU-003.antigen.test.js",
+        ".mse-final\\cegis-antigens\\DRIFT-HU-005.antigen.test.js",
+        ".mse-final\\cegis-antigens\\DRIFT-PM-001.antigen.test.js",
+        ".mse-final\\cegis-antigens\\DRIFT-RU-006.antigen.test.js",
+        ".mse-final\\cegis-antigens\\DRIFT-RU-007.antigen.test.js",
+        ".mse-final\\pr\\antigens\\DRIFT-EVU-002.antigen.test.js",
+        ".mse-final\\pr\\antigens\\DRIFT-EVU-003.antigen.test.js",
+        ".mse-final\\pr\\antigens\\DRIFT-HU-005.antigen.test.js",
+        ".mse-final\\pr\\antigens\\DRIFT-PM-001.antigen.test.js",
+        ".mse-final\\pr\\antigens\\DRIFT-RU-006.antigen.test.js",
+        ".mse-final\\pr\\antigens\\DRIFT-RU-007.antigen.test.js",
+        "src\\db\\pool.js",
+        "src\\routes\\webhook.js"
+      ],
+      "evidence": [
+        {
+          "file": ".mse-final\\cegis-antigens\\DRIFT-EVU-002.antigen.test.js",
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-EVU-002 -- Code reads env var \\'PORT\\' which is not declared in documentation.', () => {"
+        },
+        {
+          "file": ".mse-final\\cegis-antigens\\DRIFT-EVU-002.antigen.test.js",
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "file": ".mse-final\\cegis-antigens\\DRIFT-EVU-002.antigen.test.js",
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "file": ".mse-final\\cegis-antigens\\DRIFT-EVU-003.antigen.test.js",
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-EVU-003 -- Code reads env var \\'WEBHOOK_SECRET\\' which is not declared in documentation.', () => {"
+        },
+        {
+          "file": ".mse-final\\cegis-antigens\\DRIFT-EVU-003.antigen.test.js",
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "file": ".mse-final\\cegis-antigens\\DRIFT-EVU-003.antigen.test.js",
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "file": ".mse-final\\cegis-antigens\\DRIFT-HU-005.antigen.test.js",
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-HU-005 -- Code requires header \\'authorization\\' which is absent from all documentation.', () => {"
+        },
+        {
+          "file": ".mse-final\\cegis-antigens\\DRIFT-HU-005.antigen.test.js",
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "file": ".mse-final\\cegis-antigens\\DRIFT-HU-005.antigen.test.js",
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "file": ".mse-final\\cegis-antigens\\DRIFT-PM-001.antigen.test.js",
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-PM-001 -- Documentation claims port 3000 but code binds to: 8080.', () => {"
+        },
+        {
+          "file": ".mse-final\\cegis-antigens\\DRIFT-PM-001.antigen.test.js",
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "file": ".mse-final\\cegis-antigens\\DRIFT-PM-001.antigen.test.js",
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "file": ".mse-final\\cegis-antigens\\DRIFT-RU-006.antigen.test.js",
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-RU-006 -- Route GET:/health exists in code (index.js) but is absent from all OpenAPI specs.', () => {"
+        },
+        {
+          "file": ".mse-final\\cegis-antigens\\DRIFT-RU-006.antigen.test.js",
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "file": ".mse-final\\cegis-antigens\\DRIFT-RU-006.antigen.test.js",
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "file": ".mse-final\\cegis-antigens\\DRIFT-RU-007.antigen.test.js",
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-RU-007 -- Route POST:/github exists in code (src\\routes\\webhook.js) but is absent from all OpenAPI specs"
+        },
+        {
+          "file": ".mse-final\\cegis-antigens\\DRIFT-RU-007.antigen.test.js",
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "file": ".mse-final\\cegis-antigens\\DRIFT-RU-007.antigen.test.js",
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "file": ".mse-final\\pr\\antigens\\DRIFT-EVU-002.antigen.test.js",
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-EVU-002 -- Code reads env var \\'PORT\\' which is not declared in documentation.', () => {"
+        },
+        {
+          "file": ".mse-final\\pr\\antigens\\DRIFT-EVU-002.antigen.test.js",
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "file": ".mse-final\\pr\\antigens\\DRIFT-EVU-002.antigen.test.js",
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "file": ".mse-final\\pr\\antigens\\DRIFT-EVU-003.antigen.test.js",
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-EVU-003 -- Code reads env var \\'WEBHOOK_SECRET\\' which is not declared in documentation.', () => {"
+        },
+        {
+          "file": ".mse-final\\pr\\antigens\\DRIFT-EVU-003.antigen.test.js",
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "file": ".mse-final\\pr\\antigens\\DRIFT-EVU-003.antigen.test.js",
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "file": ".mse-final\\pr\\antigens\\DRIFT-HU-005.antigen.test.js",
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-HU-005 -- Code requires header \\'authorization\\' which is absent from all documentation.', () => {"
+        },
+        {
+          "file": ".mse-final\\pr\\antigens\\DRIFT-HU-005.antigen.test.js",
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "file": ".mse-final\\pr\\antigens\\DRIFT-HU-005.antigen.test.js",
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "file": ".mse-final\\pr\\antigens\\DRIFT-PM-001.antigen.test.js",
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-PM-001 -- Documentation claims port 3000 but code binds to: 8080.', () => {"
+        },
+        {
+          "file": ".mse-final\\pr\\antigens\\DRIFT-PM-001.antigen.test.js",
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "file": ".mse-final\\pr\\antigens\\DRIFT-PM-001.antigen.test.js",
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "file": ".mse-final\\pr\\antigens\\DRIFT-RU-006.antigen.test.js",
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-RU-006 -- Route GET:/health exists in code (index.js) but is absent from all OpenAPI specs.', () => {"
+        },
+        {
+          "file": ".mse-final\\pr\\antigens\\DRIFT-RU-006.antigen.test.js",
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "file": ".mse-final\\pr\\antigens\\DRIFT-RU-006.antigen.test.js",
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "file": ".mse-final\\pr\\antigens\\DRIFT-RU-007.antigen.test.js",
+          "lineNumber": 12,
+          "excerpt": "describe('DRIFT-RU-007 -- Route POST:/github exists in code (src\\routes\\webhook.js) but is absent from all OpenAPI specs"
+        },
+        {
+          "file": ".mse-final\\pr\\antigens\\DRIFT-RU-007.antigen.test.js",
+          "lineNumber": 13,
+          "excerpt": "it('RED: synchronous I/O blocks event loop under concurrent load', async () => {"
+        },
+        {
+          "file": ".mse-final\\pr\\antigens\\DRIFT-RU-007.antigen.test.js",
+          "lineNumber": 14,
+          "excerpt": "const order = [];"
+        },
+        {
+          "file": "src\\db\\pool.js",
+          "lineNumber": 8,
+          "excerpt": "export const pool = {"
+        },
+        {
+          "file": "src\\db\\pool.js",
+          "lineNumber": 10,
+          "excerpt": "await new Promise(r => setTimeout(r, 1));"
+        },
+        {
+          "file": "src\\db\\pool.js",
+          "lineNumber": 14,
+          "excerpt": "let released = false;"
+        },
+        {
+          "file": "src\\routes\\webhook.js",
+          "lineNumber": 15,
+          "excerpt": "export const webhookRouter = express.Router();"
+        },
+        {
+          "file": "src\\routes\\webhook.js",
+          "lineNumber": 27,
+          "excerpt": "webhookRouter.post('/github', async (req, res) => {"
+        },
+        {
+          "file": "src\\routes\\webhook.js",
+          "lineNumber": 30,
+          "excerpt": "//   const sig256 = req.headers['x-hub-signature-256'];"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "morphogenetic-software-engine",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "MSE engine: Morphologist, Symbiote, Immune Core subagents",
+  "scripts": {
+    "dev": "npm run dev --prefix project-mse",
+    "build": "npm run build --prefix project-mse",
+    "vercel-build": "npm --prefix project-mse install && npm --prefix project-mse run build",
+    "preview": "npm run preview --prefix project-mse",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "morphologist": "node src/agents/morphologist.js"
+  },
+  "devDependencies": {
+    "vitest": "^2.0.0"
+  }
+}

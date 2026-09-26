@@ -20,6 +20,8 @@ pnpm-debug.log*
 .mse-final/
 test/fixtures/target_repo/.mse-output/
 test/fixtures/target_repo/.mse-final/
+test/fixtures/immune/
+test/fixtures/reconciler/
 .tempmediaStorage/
 
 # Environment Variables & Secrets

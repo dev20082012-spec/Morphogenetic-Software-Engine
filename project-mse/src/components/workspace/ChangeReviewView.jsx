@@ -86,8 +86,8 @@ export default function ChangeReviewView({
           description,
           diff: realDiff,
           isApplied: appliedRecordsForFile.length > 0,
-          isVerified: isWorkingRevisionVerified,
-          status: isWorkingRevisionVerified ? 'verified' : 'modified',
+          isVerified: isWorkingRevisionVerified && Boolean(matchingFinding?.isRepaired),
+          status: (isWorkingRevisionVerified && matchingFinding?.isRepaired) ? 'verified' : 'modified',
           originatingFinding: matchingFinding || null,
           rawPatch: appliedRecordsForFile[0] ? (patchList.find(p => p.id === appliedRecordsForFile[0].patchId) || appliedRecordsForFile[0]) : null,
           appliedRecords: appliedRecordsForFile

@@ -656,11 +656,46 @@ export default function App() {
       modification.status === 'reverted' ? modification : { ...modification, status: 'testing' },
     ])));
     resetAnalysisSession(repoName, repositorySource, analysisRunId, { preserveWorkingState: true });
+
+    let activeTarget = verificationTarget;
+    if (!activeTarget && selectedFinding) {
+      activeTarget = createVerificationTarget(
+        selectedFinding,
+        baselineResultRef.current || baselineResult || session.result,
+        baselineResult?.report?.summary?.runId || currentRunId,
+      );
+    }
+    if (!activeTarget && appliedPatchRecords.length > 0) {
+      const activeRecord = appliedPatchRecords.find(r => r.status === 'applied');
+      if (activeRecord) {
+        const matchingFinding = (unifiedFindings || []).find(f =>
+          f.id === activeRecord.findingId || f.patch?.id === activeRecord.patchId || f.file === activeRecord.filePath
+        );
+        if (matchingFinding) {
+          activeTarget = createVerificationTarget(
+            matchingFinding,
+            baselineResultRef.current || baselineResult || session.result,
+            baselineResult?.report?.summary?.runId || currentRunId,
+          );
+        }
+      }
+    }
+    if (!activeTarget && changedFiles.length > 0) {
+      const matchingFinding = (unifiedFindings || []).find(f => changedFiles.includes(f.file));
+      if (matchingFinding) {
+        activeTarget = createVerificationTarget(
+          matchingFinding,
+          baselineResultRef.current || baselineResult || session.result,
+          baselineResult?.report?.summary?.runId || currentRunId,
+        );
+      }
+    }
+
     executeSessionPipeline(snapshot, sessionToken, analysisRunId, repositorySource, 30, {
       kind: 'test',
-      target: verificationTarget,
+      target: activeTarget,
       baselineResult: baselineResultRef.current || baselineResult,
-      baselineRevision: verificationTarget?.baselineRevision || baselineResult?.report?.summary?.runId || baselineRevisionId,
+      baselineRevision: activeTarget?.baselineRevision || baselineResult?.report?.summary?.runId || baselineRevisionId,
       testedRevision: workingRev,
       changedFiles,
     });
@@ -1016,8 +1051,26 @@ export default function App() {
     if (session.status !== 'COMPLETE' || !session.result) {
       return [];
     }
-    return getUnifiedFindings(session.result, appliedPatchIds, snapshot);
-  }, [session.status, session.result, appliedPatchIds, snapshot]);
+    return getUnifiedFindings(session.result, appliedPatchIds, snapshot, {
+      verification: lastVerificationResult,
+      lastVerificationResult,
+      verificationHistory,
+      workingRevisionId,
+      modifications,
+      isTesting: session.status === 'VERIFYING' || session.status === 'ANALYZING',
+      appliedPatchRecords
+    });
+  }, [
+    session.status,
+    session.result,
+    appliedPatchIds,
+    snapshot,
+    lastVerificationResult,
+    verificationHistory,
+    workingRevisionId,
+    modifications,
+    appliedPatchRecords
+  ]);
 
   // Compute manual changes (Baseline vs In-Memory snapshot) (Requirement 11)
   const manualChanges = useMemo(() => {

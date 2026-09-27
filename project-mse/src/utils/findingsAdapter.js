@@ -12,6 +12,7 @@
 
 import { calculateBlastRadius } from '../engine/repositoryGraph/blastRadius.js';
 import { computeFindingCapabilities } from '../engine/capabilities.js';
+import { computeRevisionId } from '../engine/patchLifecycle.js';
 
 /**
  * @typedef {{
@@ -87,8 +88,8 @@ function formatCounterexample(rawCx, finding, primaryFile) {
 /**
  * Build the structured FindingEvidenceChain model.
  */
-function buildEvidenceChain(findingId, title, sourceEvidence, docEvidence, invariant, counterexample, patch, impact, verification, isRepaired) {
-
+function buildEvidenceChain(findingId, title, sourceEvidence, docEvidence, invariant, counterexample, patch, impact, activeVerification, isRepaired, verificationStatus, baselineVerification = null) {
+  const checks = (activeVerification?.checks || baselineVerification?.checks || []).slice(0, 5);
   return {
     finding: {
       id: findingId,
@@ -105,31 +106,151 @@ function buildEvidenceChain(findingId, title, sourceEvidence, docEvidence, invar
     patch: patch || null,
     candidatePatch: patch || null,
     verification: {
-      status: isRepaired && verification?.status === 'VERIFIED' ? 'VERIFIED' : 'NEEDS_REVIEW',
-      checks: (verification?.checks || []).slice(0, 5)
+      status: isRepaired ? 'VERIFIED' : (verificationStatus === 'FAILED' ? 'FAILED' : 'NEEDS_REVIEW'),
+      checks
     }
   };
 }
 
-export function getUnifiedFindings(pipelineResult, appliedPatchIds = [], snapshot = null) {
+export function getUnifiedFindings(
+  pipelineResult,
+  appliedPatchIds = [],
+  snapshot = null,
+  verificationOrOptions = null,
+  currentWorkingRevisionId = null,
+  modifications = {},
+  isTesting = false,
+  appliedPatchRecords = []
+) {
   if (!pipelineResult) return [];
+
+  let verification = null;
+  let workingRevId = currentWorkingRevisionId;
+  let mods = modifications || {};
+  let testing = Boolean(isTesting);
+  let patchRecords = appliedPatchRecords || [];
+  let verificationHistory = [];
+
+  if (verificationOrOptions && typeof verificationOrOptions === 'object') {
+    if ('targetFindingId' in verificationOrOptions || 'status' in verificationOrOptions) {
+      verification = verificationOrOptions;
+    } else {
+      // Options object passed
+      verification = verificationOrOptions.verification || verificationOrOptions.lastVerificationResult || null;
+      workingRevId = verificationOrOptions.workingRevisionId || verificationOrOptions.currentWorkingRevisionId || workingRevId;
+      mods = verificationOrOptions.modifications || mods;
+      testing = Boolean(verificationOrOptions.isTesting !== undefined ? verificationOrOptions.isTesting : testing);
+      patchRecords = verificationOrOptions.appliedPatchRecords || patchRecords;
+      verificationHistory = verificationOrOptions.verificationHistory || [];
+    }
+  }
+
+  // Derive workingRevisionId from snapshot if not explicitly provided
+  if (!workingRevId && snapshot) {
+    workingRevId = computeRevisionId(snapshot);
+  }
+
+  const resolveFindingState = (f, associatedPatch, primaryFile) => {
+    const patchApplied = Boolean(
+      associatedPatch &&
+      Array.isArray(appliedPatchIds) &&
+      appliedPatchIds.includes(associatedPatch.id)
+    );
+
+    const relatedFiles = [
+      primaryFile,
+      associatedPatch?.targetFile,
+      ...(f.sourceEvidence || []).map(e => e.file),
+      ...(f.documentationEvidence || []).map(e => e.file)
+    ].filter(Boolean);
+
+    const hasFileMod = relatedFiles.some(file => {
+      const m = mods[file];
+      return m && m.status !== 'reverted';
+    });
+
+    const isModified = patchApplied || hasFileMod;
+
+    // Direct target check: verification must match targetFindingId and tested revision
+    const isDirectMatch = Boolean(
+      verification &&
+      (verification.targetFindingId === f.id || verification.targetFindingId === f.findingId)
+    );
+    const directTestedRev = verification?.testedRevision || verification?.testedRevisionId;
+    const isDirectRevMatch = Boolean(
+      verification &&
+      workingRevId &&
+      directTestedRev === workingRevId
+    );
+
+    // History match: check if a prior run on the current revision verified this finding
+    const historyMatch = (verificationHistory || []).slice().reverse().find(v =>
+      (v.targetFindingId === f.id || v.targetFindingId === f.findingId) &&
+      (v.testedRevision || v.testedRevisionId) === workingRevId
+    );
+
+    const activeVerification = (isDirectMatch && isDirectRevMatch)
+      ? verification
+      : (historyMatch || null);
+
+    let verificationStatus = 'UNMODIFIED';
+    let isRepaired = false;
+    let status = 'Open';
+
+    if (testing) {
+      verificationStatus = 'TESTING';
+      status = 'Testing';
+    } else if (activeVerification) {
+      if (activeVerification.status === 'VERIFIED') {
+        verificationStatus = 'VERIFIED';
+        isRepaired = true;
+        status = 'Verified — Resolved';
+      } else if (activeVerification.status === 'FAILED') {
+        verificationStatus = 'FAILED';
+        status = 'Failed — Still Detected';
+      } else {
+        verificationStatus = 'NEEDS_REVIEW';
+        status = 'Needs Review';
+      }
+    } else if (patchApplied) {
+      verificationStatus = 'NOT_VERIFIED';
+      status = 'Applied in RAM — Not Verified';
+    } else if (isModified) {
+      verificationStatus = 'NOT_VERIFIED';
+      status = 'Modified — Not Verified';
+    } else {
+      verificationStatus = 'UNMODIFIED';
+      status = 'Open';
+    }
+
+    return {
+      patchApplied,
+      isModified,
+      isTesting: testing,
+      verificationStatus,
+      isRepaired,
+      status,
+      activeVerification
+    };
+  };
 
   const analysisFindings = (pipelineResult.analysis?.findings || []).map((f) => {
     const associatedPatch = pipelineResult.patches?.patches?.find(
       (p) => p.findingId === f.id || p.targetFile === f.sourceEvidence?.[0]?.file
     );
-    const isRepaired = associatedPatch ? appliedPatchIds.includes(associatedPatch.id) : false;
+    const primaryFile = f.sourceEvidence?.[0]?.file || 'src/server.ts';
+    const primaryLine = f.sourceEvidence?.[0]?.line || 1;
+    const sourceEvidence = f.sourceEvidence || [];
+    const docEvidence = f.documentationEvidence || [];
+
+    const state = resolveFindingState(f, associatedPatch, primaryFile);
+
     const rawCx = pipelineResult.counterexamples?.counterexamples?.find(
       (c) => c.findingId === f.id || c.invariantId === f.invariantId
     );
     const associatedInv = pipelineResult.invariants?.invariants?.find(
       (i) => i.id === f.invariantId
     );
-
-    const primaryFile = f.sourceEvidence?.[0]?.file || 'src/server.ts';
-    const primaryLine = f.sourceEvidence?.[0]?.line || 1;
-    const sourceEvidence = f.sourceEvidence || [];
-    const docEvidence = f.documentationEvidence || [];
 
     const whyFlagged = generateWhyFlagged(f, sourceEvidence, docEvidence);
     const blastRadius = calculateBlastRadius(primaryFile, pipelineResult.analysis, snapshot);
@@ -143,8 +264,10 @@ export function getUnifiedFindings(pipelineResult, appliedPatchIds = [], snapsho
       counterexample,
       associatedPatch,
       blastRadius,
-      pipelineResult.verification,
-      isRepaired
+      state.activeVerification,
+      state.isRepaired,
+      state.verificationStatus,
+      pipelineResult.verification
     );
 
     const findingObj = {
@@ -159,17 +282,27 @@ export function getUnifiedFindings(pipelineResult, appliedPatchIds = [], snapsho
       evidenceChain,
       file: primaryFile,
       line: primaryLine,
-      status: isRepaired ? 'Repaired in Memory' : 'Open',
-      isRepaired,
+      status: state.status,
+      patchApplied: state.patchApplied,
+      isModified: state.isModified,
+      isTesting: state.isTesting,
+      verificationStatus: state.verificationStatus,
+      isRepaired: state.isRepaired,
       sourceEvidence,
       documentationEvidence: docEvidence,
       counterexample,
       patch: associatedPatch,
       invariant: associatedInv,
-      confidence: f.confidence || 'high'
+      confidence: f.confidence || 'high',
+      verification: state.activeVerification
     };
 
-    findingObj.capabilities = computeFindingCapabilities(findingObj, isRepaired, true, pipelineResult.verification);
+    findingObj.capabilities = computeFindingCapabilities(
+      findingObj,
+      state.isRepaired,
+      true,
+      state.activeVerification || pipelineResult.verification
+    );
     return findingObj;
   });
 
@@ -177,15 +310,16 @@ export function getUnifiedFindings(pipelineResult, appliedPatchIds = [], snapsho
     const associatedPatch = pipelineResult.patches?.patches?.find(
       (p) => p.findingId === f.id || p.targetFile === f.sourceEvidence?.[0]?.file
     );
-    const isRepaired = associatedPatch ? appliedPatchIds.includes(associatedPatch.id) : false;
-    const rawCx = pipelineResult.counterexamples?.counterexamples?.find(
-      (c) => c.findingId === f.id
-    );
-
     const primaryFile = f.sourceEvidence?.[0]?.file || f.documentationEvidence?.[0]?.file || 'README.md';
     const primaryLine = f.sourceEvidence?.[0]?.line || f.documentationEvidence?.[0]?.line || 1;
     const sourceEvidence = f.sourceEvidence || [];
     const docEvidence = f.documentationEvidence || [];
+
+    const state = resolveFindingState(f, associatedPatch, primaryFile);
+
+    const rawCx = pipelineResult.counterexamples?.counterexamples?.find(
+      (c) => c.findingId === f.id
+    );
 
     const whyFlagged = generateWhyFlagged({ ...f, origin: 'beta' }, sourceEvidence, docEvidence);
     const blastRadius = calculateBlastRadius(primaryFile, pipelineResult.analysis, snapshot);
@@ -199,8 +333,10 @@ export function getUnifiedFindings(pipelineResult, appliedPatchIds = [], snapsho
       counterexample,
       associatedPatch,
       blastRadius,
-      pipelineResult.verification,
-      isRepaired
+      state.activeVerification,
+      state.isRepaired,
+      state.verificationStatus,
+      pipelineResult.verification
     );
 
     const driftObj = {
@@ -215,16 +351,26 @@ export function getUnifiedFindings(pipelineResult, appliedPatchIds = [], snapsho
       evidenceChain,
       file: primaryFile,
       line: primaryLine,
-      status: isRepaired ? 'Repaired in Memory' : 'Open',
-      isRepaired,
+      status: state.status,
+      patchApplied: state.patchApplied,
+      isModified: state.isModified,
+      isTesting: state.isTesting,
+      verificationStatus: state.verificationStatus,
+      isRepaired: state.isRepaired,
       sourceEvidence,
       documentationEvidence: docEvidence,
       counterexample,
       patch: associatedPatch,
-      confidence: f.confidence || 'high'
+      confidence: f.confidence || 'high',
+      verification: state.activeVerification
     };
 
-    driftObj.capabilities = computeFindingCapabilities(driftObj, isRepaired, true, pipelineResult.verification);
+    driftObj.capabilities = computeFindingCapabilities(
+      driftObj,
+      state.isRepaired,
+      true,
+      state.activeVerification || pipelineResult.verification
+    );
     return driftObj;
   });
 

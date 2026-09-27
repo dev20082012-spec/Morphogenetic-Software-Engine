@@ -238,9 +238,11 @@ export function computeFindingCapabilities(finding, isRepaired = false, hasEdita
   const hasBlastRadius = Boolean(finding.blastRadius?.isAvailable);
   const hasMsePatch = Boolean(finding.patch);
 
-  const verificationStatus = isRepaired
-    ? (finding.evidenceChain?.verification?.status || verification?.status || 'NEEDS_REVIEW')
-    : 'UNMODIFIED';
+  const patchApplied = finding.patchApplied || false;
+  const isModified = finding.isModified || false;
+  const verificationStatus = finding.verificationStatus || (isRepaired
+    ? (finding.evidenceChain?.verification?.status || verification?.status || 'VERIFIED')
+    : (patchApplied || isModified ? 'NOT_VERIFIED' : 'UNMODIFIED'));
 
   const isVerified = isRepaired && verificationStatus === 'VERIFIED';
 
@@ -296,6 +298,8 @@ export function computeFindingCapabilities(finding, isRepaired = false, hasEdita
       available: hasMsePatch || hasEditableSource,
       hasMsePatch,
       hasEditableSource,
+      patchApplied,
+      isModified,
       isRepaired,
       isVerified,
       verificationStatus,
@@ -304,19 +308,31 @@ export function computeFindingCapabilities(finding, isRepaired = false, hasEdita
           id: 'mse-patch',
           name: 'MSE Candidate Patch',
           available: hasMsePatch,
-          detail: hasMsePatch ? 'Synthesized in RAM' : 'Manual Edit Recommended'
+          detail: patchApplied
+            ? 'Applied in RAM'
+            : hasMsePatch
+            ? 'Synthesized in RAM'
+            : 'Manual Edit Recommended'
         },
         {
           id: 'source-editor',
           name: 'In-Memory Source Editor',
           available: hasEditableSource,
-          detail: 'RAM Buffer Active'
+          detail: isModified ? 'RAM Edits Present' : 'RAM Buffer Active'
         },
         {
           id: 'verification',
           name: 'Verification Pipeline Gate',
           available: true,
-          detail: isRepaired ? (isVerified ? 'VERIFIED' : 'NEEDS REVIEW') : 'Ready to Test'
+          detail: isVerified
+            ? 'VERIFIED'
+            : verificationStatus === 'FAILED'
+            ? 'FAILED'
+            : verificationStatus === 'TESTING'
+            ? 'TESTING'
+            : (patchApplied || isModified)
+            ? 'NOT VERIFIED'
+            : 'Ready to Test'
         }
       ]
     }

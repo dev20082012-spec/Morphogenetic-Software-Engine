@@ -38,8 +38,7 @@ export default function OverviewView({
   const unappliedPatches = (patches?.patches || []).filter(p => !safePatches.includes(p.id)).length;
 
   const repoName = snapshot?.metadata?.name || 'repository';
-
-  const isConverged = decision?.status === 'VERIFIED' && totalFindings > 0 && resolvedCount === totalFindings;
+  const isConverged = totalFindings > 0 && resolvedCount === totalFindings && safeFindings.every(f => f.isRepaired);
 
   const activeCapabilities = capabilities || computeCapabilityStatus({
     session: { status: status === 'running' ? 'ANALYZING' : 'COMPLETE' },
@@ -124,7 +123,7 @@ export default function OverviewView({
           <div>
             <span className="text-[10px] text-slate-500 tracking-wider block">Fixes to review</span>
             <div className="font-semibold text-white mt-0.5">
-              {unappliedPatches} pending <span className="text-slate-500 text-[10px]">({resolvedCount} applied)</span>
+              {unappliedPatches} pending <span className="text-slate-500 text-[10px]">({safePatches.length} applied, {resolvedCount} verified)</span>
             </div>
           </div>
 

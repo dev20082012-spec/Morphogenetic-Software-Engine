@@ -143,13 +143,33 @@ export default function FindingsView({
                     <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${
                       finding.isRepaired
                         ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                        : finding.isTesting
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        : finding.verificationStatus === 'FAILED'
+                        ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                        : finding.verificationStatus === 'NEEDS_REVIEW'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        : finding.patchApplied
+                        ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                        : finding.isModified
+                        ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
                         : isCritical
                         ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                         : isHigh
                         ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                         : 'bg-blue-500/20 text-[#38bdf8] border border-blue-500/30'
                     }`}>
-                      {finding.isRepaired ? 'REPAIRED' : finding.severity}
+                      {finding.isRepaired
+                        ? 'VERIFIED'
+                        : finding.isTesting
+                        ? 'TESTING'
+                        : finding.verificationStatus === 'FAILED'
+                        ? 'FAILED'
+                        : finding.patchApplied
+                        ? 'APPLIED IN RAM'
+                        : finding.isModified
+                        ? 'MODIFIED'
+                        : finding.severity}
                     </span>
 
                     <span className="text-[10px] px-2 py-0.5 rounded bg-[#111724] text-slate-400 border border-[#263147] font-medium">
@@ -161,8 +181,14 @@ export default function FindingsView({
                     </span>
                   </div>
 
-                  <span className={`text-[11px] font-medium ${
-                    finding.isRepaired ? 'text-emerald-400' : 'text-slate-400'
+                  <span className={`text-[11px] font-medium font-mono ${
+                    finding.isRepaired
+                      ? 'text-emerald-400'
+                      : finding.verificationStatus === 'FAILED'
+                      ? 'text-red-400'
+                      : finding.patchApplied || finding.isModified
+                      ? 'text-amber-300'
+                      : 'text-slate-400'
                   }`}>
                     {finding.status}
                   </span>
@@ -193,11 +219,24 @@ export default function FindingsView({
                   <span className={`px-1.5 py-0.5 rounded ${
                     finding.isRepaired
                       ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                      : finding.verificationStatus === 'FAILED'
+                      ? 'bg-red-500/20 text-red-300 border border-red-500/30'
+                      : finding.patchApplied
+                      ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
                       : finding.patch
                       ? 'bg-blue-500/10 text-blue-300 border border-blue-500/20'
                       : 'bg-purple-500/10 text-purple-300 border border-purple-500/20'
                   }`}>
-                    REPAIR &amp; VERIFY: {finding.isRepaired ? 'Repaired in RAM' : finding.patch ? 'Patch Available' : 'Manual Edit'}
+                    REPAIR &amp; VERIFY:{' '}
+                    {finding.isRepaired
+                      ? 'Verified in RAM'
+                      : finding.verificationStatus === 'FAILED'
+                      ? 'Failed Checks'
+                      : finding.patchApplied
+                      ? 'Applied in RAM (Not Verified)'
+                      : finding.patch
+                      ? 'Patch Available'
+                      : 'Manual Edit'}
                   </span>
                 </div>
 

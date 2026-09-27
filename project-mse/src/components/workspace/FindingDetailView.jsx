@@ -36,7 +36,9 @@ export default function FindingDetailView({
 
   const patch = finding.patch;
   const counterexample = finding.counterexample;
-  const isRepaired = finding.isRepaired;
+  const isRepaired = Boolean(finding.isRepaired);
+  const patchApplied = Boolean(finding.patchApplied);
+  const isModified = Boolean(finding.isModified);
   const isCritical = finding.severity === 'CRITICAL';
   const isHigh = finding.severity === 'HIGH';
 
@@ -91,7 +93,7 @@ export default function FindingDetailView({
               <span>Test Changes</span>
             </button>
 
-            {patch && !isRepaired && (
+            {patch && !patchApplied && (
               <button
                 onClick={() => onApplyPatch(patch)}
                 className="px-3.5 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-sm transition flex items-center space-x-1"
@@ -100,7 +102,7 @@ export default function FindingDetailView({
               </button>
             )}
 
-            {patch && isRepaired && onRevertPatch && (
+            {patch && patchApplied && onRevertPatch && (
               <button
                 onClick={() => onRevertPatch(patch)}
                 className="px-3.5 py-1.5 rounded-md bg-red-950/40 hover:bg-red-900/60 border border-red-500/40 text-red-300 font-bold text-xs transition"
@@ -125,13 +127,33 @@ export default function FindingDetailView({
             <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${
               isRepaired
                 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                : finding.isTesting
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                : finding.verificationStatus === 'FAILED'
+                ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                : finding.verificationStatus === 'NEEDS_REVIEW'
+                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                : patchApplied
+                ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                : isModified
+                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
                 : isCritical
                 ? 'bg-red-500/20 text-red-400 border border-red-500/30'
                 : isHigh
                 ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                 : 'bg-blue-500/20 text-[#38bdf8] border border-blue-500/30'
             }`}>
-              {isRepaired ? 'REPAIRED IN RAM' : finding.severity}
+              {isRepaired
+                ? 'VERIFIED'
+                : finding.isTesting
+                ? 'TESTING'
+                : finding.verificationStatus === 'FAILED'
+                ? 'FAILED'
+                : patchApplied
+                ? 'APPLIED IN RAM'
+                : isModified
+                ? 'MODIFIED'
+                : finding.severity}
             </span>
 
             <span className="text-[10px] px-2 py-0.5 rounded bg-[#111724] text-slate-400 border border-[#263147] font-medium">
@@ -221,9 +243,21 @@ export default function FindingDetailView({
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono font-bold text-emerald-400">3. REPAIR &amp; VERIFY</span>
                 <span className={`text-[10px] font-bold ${
-                  findingCaps.repairVerify.isVerified ? 'text-emerald-400' : isRepaired ? 'text-blue-400' : 'text-amber-400'
+                  findingCaps.repairVerify.isVerified
+                    ? 'text-emerald-400'
+                    : finding.verificationStatus === 'FAILED'
+                    ? 'text-red-400'
+                    : patchApplied
+                    ? 'text-blue-400'
+                    : 'text-amber-400'
                 }`}>
-                  {findingCaps.repairVerify.isVerified ? '✓ VERIFIED' : isRepaired ? 'APPLIED IN RAM' : 'REPAIR READY'}
+                  {findingCaps.repairVerify.isVerified
+                    ? '✓ VERIFIED'
+                    : finding.verificationStatus === 'FAILED'
+                    ? '✗ FAILED'
+                    : patchApplied
+                    ? 'APPLIED IN RAM'
+                    : 'REPAIR READY'}
                 </span>
               </div>
               <div className="space-y-1 text-[11px]">
@@ -463,7 +497,7 @@ export default function FindingDetailView({
         )}
 
         {/* REQUIREMENT 5: IMMEDIATELY SHOW WHAT CHANGED (PATCH APPLIED) */}
-        {patch && isRepaired && (
+        {patch && patchApplied && (
           <section className="bg-emerald-950/20 border border-emerald-500/40 rounded-lg p-5 space-y-4 shadow-md">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
@@ -473,11 +507,11 @@ export default function FindingDetailView({
                 </h2>
               </div>
               <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-bold ${
-                isWorkingRevisionVerified
+                isRepaired
                   ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                   : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
               }`}>
-                {isWorkingRevisionVerified ? 'VERIFIED' : 'MODIFIED — NOT VERIFIED'}
+                {isRepaired ? 'VERIFIED — RESOLVED' : 'MODIFIED — NOT VERIFIED'}
               </span>
             </div>
 
@@ -492,8 +526,8 @@ export default function FindingDetailView({
               </div>
               <div>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">State:</span>
-                <span className={`font-bold ${isWorkingRevisionVerified ? 'text-emerald-400' : 'text-amber-300'}`}>
-                  {isWorkingRevisionVerified ? 'VERIFIED' : 'MODIFIED — NOT VERIFIED'}
+                <span className={`font-bold ${isRepaired ? 'text-emerald-400' : 'text-amber-300'}`}>
+                  {isRepaired ? 'VERIFIED — RESOLVED' : 'MODIFIED — NOT VERIFIED'}
                 </span>
               </div>
             </div>
@@ -560,7 +594,7 @@ export default function FindingDetailView({
         )}
 
         {/* NARRATIVE SECTION: PROPOSED CHANGE (WHEN NOT APPLIED) */}
-        {patch && !isRepaired && (
+        {patch && !patchApplied && (
           <section className="bg-[#0d131f] border border-[#263147] rounded-lg p-5 space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-2">

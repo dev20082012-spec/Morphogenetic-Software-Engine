@@ -4,7 +4,6 @@ import Sidebar from './components/Sidebar';
 import CenterWorkspace from './components/CenterWorkspace';
 import LandingPage from './components/LandingPage';
 import TechnicalDrawer from './components/workspace/TechnicalDrawer';
-import VerificationConsole from './components/VerificationConsole';
 
 import { 
   loadDemoRepository, 
@@ -18,7 +17,7 @@ import {
   applySinglePatch
 } from './engine/index.js';
 import { getUnifiedFindings } from './utils/findingsAdapter.js';
-import { saveAnalysisRun } from './utils/sessionManager.js';
+import { getNextAnalysisRunId, saveAnalysisRun } from './utils/sessionManager.js';
 
 export default function App() {
   // Screen / Flow state: Landing vs Workspace
@@ -28,7 +27,7 @@ export default function App() {
   const [repositorySource, setRepositorySource] = useState('demo');
   const [snapshot, setSnapshot] = useState(null);
   const [pipelineResult, setPipelineResult] = useState(null);
-  const [currentRunId, setCurrentRunId] = useState('RUN #001');
+  const [currentRunId, setCurrentRunId] = useState(null);
 
   // Active navigation & view state
   const [activeNav, setActiveNav] = useState('overview'); // 'overview' | 'findings' | 'changes' | 'runs' | 'verification' | 'report' | 'source'
@@ -47,19 +46,9 @@ export default function App() {
   const [appliedPatchIds, setAppliedPatchIds] = useState([]);
 
   // Telemetry & execution state
-  const [status, setStatus] = useState('converged');
-  const [currentStage, setCurrentStage] = useState('COMPLETE');
-  const [durationMs, setDurationMs] = useState(18);
-  const [consoleExpanded, setConsoleExpanded] = useState(false);
-  const [logs, setLogs] = useState([
-    '[00:00.00] [ORCHESTRATOR] Initialized Project MSE Developer Studio.',
-    '[00:00.05] [INGESTING] Ingested canonical enterprise fixture into ephemeral RAM.',
-    '[00:00.12] [ANALYZING] Alpha AST Call-Graph analysis complete: endpoints indexed.',
-    '[00:00.18] [RECONCILING] Beta Spec Drift reconciliation complete: port & auth mismatches detected.',
-    '[00:00.22] [SEARCHING] Formal invariant evaluation: security invariants bound.',
-    '[00:00.28] [SYNTHESIZING] CEGIS Counterexamples & atomic repair patches synthesized.',
-    '[00:00.35] [COMPLETE] Baseline analysis ready. Review findings to inspect risks.'
-  ]);
+  const [status, setStatus] = useState('idle');
+  const [durationMs, setDurationMs] = useState(0);
+  const [logs, setLogs] = useState([]);
 
   const isRunningRef = useRef(false);
   const runIdRef = useRef(0);
@@ -67,20 +56,20 @@ export default function App() {
   // Core Audit Runner using real async pipeline
   const executeAudit = useCallback(async (targetSnapshot, customDelay = 40) => {
     const currentRunIdNum = ++runIdRef.current;
+    const analysisRunId = getNextAnalysisRunId();
+    const analysisStartedAt = new Date().toISOString();
     isRunningRef.current = true;
 
     setStatus('running');
-    setCurrentStage('INGESTING');
     setLogs([`[00:00.00] [ORCHESTRATOR] Initiating MSE analysis on "${targetSnapshot.metadata?.name || 'repository'}"...`]);
 
     try {
       const result = await runPipelineAsync(targetSnapshot, {
         stageDelayMs: customDelay,
-        runId: currentRunId,
+        runId: analysisRunId,
         onEvent: (event) => {
           if (runIdRef.current !== currentRunIdNum) return;
           if (['INGESTING', 'ANALYZING', 'RECONCILING', 'SEARCHING', 'SYNTHESIZING', 'VERIFYING', 'COMPLETE'].includes(event.phase)) {
-            setCurrentStage(event.phase);
           }
           const timeStr = new Date(event.timestamp).toLocaleTimeString();
           const logLine = `[${timeStr}] [${event.phase}] ${event.detail || event.status}`;
@@ -92,20 +81,23 @@ export default function App() {
 
       setPipelineResult(result);
       setDurationMs(result.totalDurationMs);
-      setCurrentStage('COMPLETE');
-      setStatus(result.verification?.status === 'VERIFIED' ? 'converged' : 'verified');
+      setStatus(result.decision?.status === 'VERIFIED' ? 'verified' : result.decision?.status === 'REJECTED' ? 'error' : 'needs-review');
 
       // Record analysis session in product memory
       const savedRun = saveAnalysisRun({
-        id: currentRunId,
+        id: analysisRunId,
         repositoryName: targetSnapshot.metadata?.name || 'repository',
         repositorySource: targetSnapshot.metadata?.source || repositorySource,
         durationMs: result.totalDurationMs,
+        startTime: analysisStartedAt,
         filesCount: targetSnapshot.files?.length || 0,
         findingsCount: (result.analysis?.findings?.length || 0) + (result.drift?.findings?.length || 0),
+        invariantViolations: result.invariants?.summary?.violated || 0,
         counterexamplesCount: result.counterexamples?.summary?.generated || 0,
         patchesCount: result.patches?.summary?.generated || 0,
-        verificationOutcome: result.verification?.status === 'VERIFIED' ? 'VERIFIED' : 'NEEDS REVIEW',
+        candidateRepairs: result.patches?.summary?.generated || 0,
+        verificationOutcome: result.decision?.status || 'NEEDS_REVIEW',
+        decision: result.decision,
         snapshot: targetSnapshot,
         pipelineResult: result
       });
@@ -173,7 +165,6 @@ export default function App() {
   const handleUploadZip = async (file) => {
     try {
       setStatus('running');
-      setCurrentStage('INGESTING');
       setLogs(prev => [...prev, `[ZIP] Unpacking archive "${file.name}" in ephemeral RAM...`]);
 
       const arrayBuffer = await file.arrayBuffer();
@@ -209,7 +200,6 @@ export default function App() {
   const handleAnalyzeGithub = async (url) => {
     try {
       setStatus('running');
-      setCurrentStage('INGESTING');
       const { owner, repo } = parseGitHubUrl(url);
       setLogs(prev => [...prev, `[GITHUB] Connecting to GitHub REST API for "${owner}/${repo}"...`]);
 
@@ -409,8 +399,6 @@ export default function App() {
             allPatchesApplied={patches.length > 0 && patches.every(p => appliedPatchIds.includes(p.id))}
             onApplyAllPatches={handleApplyAllPatches}
             onChangeRepository={() => setIsLanding(true)}
-            onToggleTechnical={() => setIsTechnicalOpen(!isTechnicalOpen)}
-            isTechnicalOpen={isTechnicalOpen}
           />
 
           {/* Workbench Body: Clean Left Sidebar + Center Workspace */}
@@ -428,7 +416,6 @@ export default function App() {
               findingsCount={unifiedFindings.length}
               criticalCount={criticalCount}
               patchesCount={patches.length}
-              verificationStatus={pipelineResult?.verification?.status}
               onChangeRepository={() => setIsLanding(true)}
               onToggleTechnical={() => setIsTechnicalOpen(!isTechnicalOpen)}
               isTechnicalOpen={isTechnicalOpen}
@@ -472,19 +459,6 @@ export default function App() {
             logs={logs}
           />
 
-          {/* Bottom Telemetry & Console (Collapsible) */}
-          <VerificationConsole
-            status={status}
-            currentStage={currentStage}
-            logs={logs}
-            onRunAudit={handleRunAudit}
-            onReRunVerification={handleReRunVerification}
-            onReset={handleSelectEnterpriseDemo}
-            isExpanded={consoleExpanded}
-            onToggleExpand={() => setConsoleExpanded(!consoleExpanded)}
-            durationMs={durationMs}
-            filesCount={snapshot?.files?.length || 0}
-          />
         </div>
       )}
     </div>

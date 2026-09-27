@@ -38,13 +38,14 @@ export default function CenterWorkspace({
 }) {
   const patches = pipelineResult?.patches;
   const verification = pipelineResult?.verification;
+  const decision = pipelineResult?.decision;
   const invariants = pipelineResult?.invariants;
   const report = pipelineResult?.report;
 
   const repoName = snapshot?.metadata?.name || 'repository';
 
   return (
-    <div className="flex-1 flex flex-col bg-[#090d16] overflow-hidden">
+    <div className="flex-1 min-w-0 flex flex-col bg-[#090d16] overflow-hidden">
       <ErrorBoundary onReset={() => onModeChange('overview')}>
         {/* OVERVIEW VIEW */}
         {mode === 'overview' && (
@@ -77,6 +78,8 @@ export default function CenterWorkspace({
               onApplyPatch={onApplyPatch}
               onVerifyFix={onReRunVerification}
               onNavigateTab={onModeChange}
+              verification={verification}
+              decision={decision}
             />
           ) : (
             <FindingsView
@@ -99,6 +102,8 @@ export default function CenterWorkspace({
             targetFile={targetDiffFile}
             repoName={repoName}
             onNavigateTab={onModeChange}
+            verification={verification}
+            decision={decision}
           />
         )}
 
@@ -117,6 +122,7 @@ export default function CenterWorkspace({
         {mode === 'verification' && (
           <VerificationView
             verification={verification}
+            decision={decision}
             invariants={invariants}
             onReRunVerification={onReRunVerification}
             status={status}

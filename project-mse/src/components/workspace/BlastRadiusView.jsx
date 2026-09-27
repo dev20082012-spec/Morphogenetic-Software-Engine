@@ -8,10 +8,10 @@ export default function BlastRadiusView({
     return (
       <div className="bg-[#0d131f] border border-[#263147] rounded-lg p-4 space-y-1 font-sans text-xs">
         <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-          Impact / Blast Radius
+          Impacted files
         </h3>
         <p className="text-slate-500 text-xs italic">
-          {blastRadius?.summary || 'Impact graph unavailable for this finding.'}
+          {blastRadius?.summary || 'Impact unavailable from current repository evidence.'}
         </p>
       </div>
     );
@@ -31,7 +31,7 @@ export default function BlastRadiusView({
         <div>
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center space-x-2">
             <span className="h-1.5 w-1.5 rounded-full bg-orange-400" />
-            <span>Impact / Blast Radius (Alpha Graph)</span>
+            <span>Impacted files</span>
           </h3>
           <p className="text-[11px] text-slate-400 mt-0.5">
             Static call-graph dependency traversal identifying affected callers, dependencies, and test suites.

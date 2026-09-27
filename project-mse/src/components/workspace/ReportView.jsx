@@ -27,13 +27,15 @@ export default function ReportView({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center space-x-2">
-              <span className="font-bold text-slate-100 text-sm uppercase tracking-wider">AUDIT REPORT</span>
+              <span className="font-bold text-slate-100 text-sm">Audit report</span>
               <span className={`text-[10px] px-2 py-0.5 rounded-sm font-bold uppercase border ${
                 summary.verificationStatus === 'VERIFIED'
                   ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                  : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                  : summary.verificationStatus === 'REJECTED'
+                    ? 'bg-red-500/20 text-red-400 border-red-500/30'
+                    : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
               }`}>
-                {summary.verificationStatus === 'VERIFIED' ? 'VERIFIED' : 'NEEDS REVIEW'}
+                {summary.verificationStatus || 'NEEDS_REVIEW'}
               </span>
             </div>
             <p className="text-xs text-slate-400">

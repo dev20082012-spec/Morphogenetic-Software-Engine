@@ -18,7 +18,7 @@
  * @typedef {{
  *   files: RepositoryFile[],
  *   metadata: {
- *     source: 'demo' | 'zip',
+ *     source: 'demo' | 'zip' | 'github',
  *     name: string,
  *     loadedAt: string,
  *     description?: string,
@@ -89,7 +89,7 @@
 
 /**
  * @typedef {{
- *   status: 'VERIFIED' | 'FAILED',
+ *   status: 'VERIFIED' | 'FAILED' | 'REJECTED' | 'NEEDS_REVIEW',
  *   checks: VerificationCheck[],
  *   evidence: Evidence[],
  *   durationMs: number,
@@ -99,8 +99,10 @@
 /**
  * @typedef {{
  *   name: string,
- *   status: 'passed' | 'failed',
+ *   status: 'passed' | 'failed' | 'skipped',
  *   detail: string,
+ *   required?: boolean,
+ *   evidence?: Evidence[],
  * }} VerificationCheck
  */
 

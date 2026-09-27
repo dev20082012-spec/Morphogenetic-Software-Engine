@@ -4,7 +4,8 @@ export default function EvidenceChainView({
   evidenceChain,
   onViewSource,
   onViewPatch,
-  onApplyPatch
+  onApplyPatch,
+  verification: pipelineVerification
 }) {
   const [activeStage, setActiveStage] = useState('finding');
 
@@ -20,6 +21,7 @@ export default function EvidenceChainView({
     patch,
     verification
   } = evidenceChain;
+  const displayedVerification = pipelineVerification || verification;
 
   const stages = [
     { id: 'finding', label: '1. Finding', desc: findingId, isReady: true },
@@ -27,7 +29,7 @@ export default function EvidenceChainView({
     { id: 'invariant', label: '3. Invariant', desc: invariant ? invariant.id : 'Spec Contract', isReady: Boolean(invariant) },
     { id: 'counterexample', label: '4. Counterexample', desc: counterexample ? counterexample.id : 'N/A', isReady: Boolean(counterexample) },
     { id: 'patch', label: '5. Patch', desc: patch ? patch.strategy : 'Synthesized', isReady: Boolean(patch) },
-    { id: 'verification', label: '6. Verification', desc: verification?.status || 'Pending', isReady: Boolean(verification) }
+    { id: 'verification', label: '6. Verification', desc: displayedVerification?.status || 'Pending', isReady: Boolean(displayedVerification) }
   ];
 
   return (
@@ -191,12 +193,12 @@ export default function EvidenceChainView({
           <div className="space-y-2">
             <span className="text-purple-400 font-bold block">VERIFICATION GATE:</span>
             <div className="space-y-1 text-slate-300 text-[11px]">
-              {verification?.checks?.map((c, i) => (
+              {displayedVerification?.checks?.map((c, i) => (
                 <div key={i} className="flex items-center space-x-2">
-                  <span className={c.passed ? 'text-emerald-400' : 'text-amber-400'}>
-                    {c.passed ? '✓' : '○'}
+                  <span className={c.status === 'passed' ? 'text-emerald-400' : c.status === 'skipped' ? 'text-slate-400' : 'text-red-400'}>
+                    {c.status === 'passed' ? '✓' : c.status === 'skipped' ? '○' : '✗'}
                   </span>
-                  <span className={c.passed ? 'text-slate-200' : 'text-slate-400'}>{c.name}</span>
+                  <span className={c.status === 'passed' ? 'text-slate-200' : 'text-slate-400'}>{c.name}: {String(c.status || 'skipped').toUpperCase()}</span>
                 </div>
               ))}
             </div>

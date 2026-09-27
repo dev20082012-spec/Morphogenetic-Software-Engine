@@ -14,6 +14,8 @@ export default function TechnicalDrawer({
   const drift = pipelineResult?.drift;
   const counterexamples = pipelineResult?.counterexamples;
   const invariants = pipelineResult?.invariants;
+  const verification = pipelineResult?.verification;
+  const decision = pipelineResult?.decision;
 
   return (
     <div className="fixed inset-y-0 right-0 w-full sm:w-[620px] bg-[#0d131f] border-l border-[#263147] shadow-2xl flex flex-col z-50 font-mono text-xs text-slate-200">
@@ -230,6 +232,20 @@ export default function TechnicalDrawer({
               <p className="text-slate-400 text-[11px] leading-relaxed">
                 Evaluates system invariants across security, documentation, and relational boundaries to determine repository convergence.
               </p>
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="font-bold text-xs text-slate-200">Verification checks ({decision?.checks?.length || verification?.checks?.length || 0})</h3>
+              <div className="space-y-1">
+                {(decision?.checks || verification?.checks || []).map((check, i) => (
+                  <div key={i} className="flex items-start gap-2 p-2 bg-[#060910] rounded text-[11px]">
+                    <span className={check.status === 'passed' ? 'text-emerald-400' : check.status === 'skipped' ? 'text-slate-400' : 'text-red-400'}>
+                      {String(check.status || 'skipped').toUpperCase()}
+                    </span>
+                    <span className="text-slate-300">{check.name}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="space-y-2">

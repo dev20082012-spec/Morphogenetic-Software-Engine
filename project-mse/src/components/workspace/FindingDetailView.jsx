@@ -10,7 +10,9 @@ export default function FindingDetailView({
   onViewPatch,
   onApplyPatch,
   onVerifyFix,
-  onNavigateTab
+  onNavigateTab,
+  verification,
+  decision
 }) {
   const [showFullTest, setShowFullTest] = useState(false);
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
@@ -35,14 +37,8 @@ export default function FindingDetailView({
   const diffChunks = patch?.diff ? parseUnifiedDiff(patch.diff) : [];
 
   // Verification Gate Model with MSE Exact Checks
-  const gateDecision = isRepaired ? 'VERIFIED' : 'NEEDS_REVIEW';
-  const gateChecks = [
-    { name: 'Original counterexample resolved and no longer reproduces', passed: isRepaired },
-    { name: 'Synthesized regression test passes', passed: isRepaired },
-    { name: 'Supported system invariant restored', passed: isRepaired },
-    { name: 'AST syntax & build check passes', passed: true },
-    { name: 'No newly detected supported violation introduced', passed: true }
-  ];
+  const gateDecision = decision?.status || verification?.status || 'PENDING';
+  const gateChecks = decision?.checks || verification?.checks || [];
 
   return (
     <div className="flex-1 flex flex-col font-sans bg-[#090d16] text-slate-200 overflow-hidden">
@@ -72,6 +68,15 @@ export default function FindingDetailView({
                 className="px-3 py-1.5 rounded-md bg-[#111724] hover:bg-[#1e293b] border border-[#263147] text-slate-200 text-xs font-medium transition"
               >
                 View Patch Diff
+              </button>
+            )}
+
+            {counterexample && (
+              <button
+                onClick={() => document.getElementById('counterexample-section')?.scrollIntoView({ behavior: 'smooth' })}
+                className="px-3 py-1.5 rounded-md bg-[#111724] hover:bg-[#1e293b] border border-[#263147] text-slate-200 text-xs font-medium transition"
+              >
+                View Counterexample
               </button>
             )}
 
@@ -130,10 +135,10 @@ export default function FindingDetailView({
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center space-x-2">
               <span className="h-1.5 w-1.5 rounded-full bg-[#38bdf8]" />
-              <span>Trust &amp; Explainability Summary</span>
+              <span>What MSE found</span>
             </h2>
             <span className="text-[10px] text-slate-400 bg-[#111724] border border-[#263147] px-2 py-0.5 rounded font-mono">
-              Deterministic Verification
+              Evidence summary
             </span>
           </div>
 
@@ -180,9 +185,11 @@ export default function FindingDetailView({
             <div className="p-3 bg-[#111724] border border-[#1e293b] rounded space-y-1">
               <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400 block">How was it verified?</span>
               <p className="text-slate-200 leading-snug">
-                {isRepaired 
-                  ? 'Verified against MSE checks: counterexample ceased to reproduce and invariant satisfied.' 
-                  : 'Pending patch application to satisfy bound invariant checks.'}
+                {gateDecision === 'VERIFIED'
+                  ? 'Verified against MSE checks.'
+                  : gateDecision === 'REJECTED'
+                    ? 'A required MSE check failed.'
+                    : 'Verification requires review.'}
               </p>
             </div>
           </div>
@@ -192,6 +199,7 @@ export default function FindingDetailView({
         {finding.evidenceChain && (
           <EvidenceChainView
             evidenceChain={finding.evidenceChain}
+            verification={decision || verification}
             onViewSource={() => onJumpToSource(finding.file, finding.line)}
             onViewPatch={onViewPatch}
             onApplyPatch={onApplyPatch}
@@ -202,7 +210,7 @@ export default function FindingDetailView({
         <section className="bg-[#0d131f] border border-[#263147] rounded-lg p-5 space-y-3">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-2">
             <span className="h-1.5 w-1.5 rounded-full bg-[#38bdf8]" />
-            <span>Why Did MSE Flag This?</span>
+              <span>Why MSE flagged it</span>
           </h2>
           <div className="text-sm text-slate-200 leading-relaxed font-sans bg-[#111724] border border-[#1e293b] p-3.5 rounded">
             <p className="font-medium text-white">{finding.whyFlagged}</p>
@@ -267,11 +275,11 @@ export default function FindingDetailView({
 
         {/* MECHANISM 4: STRUCTURED COUNTEREXAMPLE (GAMMA) */}
         {counterexample && (
-          <section className="bg-[#0d131f] border border-[#263147] rounded-lg p-5 space-y-3.5">
+          <section id="counterexample-section" className="bg-[#0d131f] border border-[#263147] rounded-lg p-5 space-y-3.5">
             <div className="flex items-center justify-between">
               <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
-                <span>Gamma Counterexample Synthesis</span>
+                <span>Counterexample</span>
               </h2>
               <span className="text-[10px] px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/30 font-mono">
                 {counterexample.id}
@@ -342,7 +350,7 @@ export default function FindingDetailView({
             <div className="flex items-center justify-between">
               <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                <span>Candidate Repair Patch</span>
+              <span>Proposed change</span>
               </h2>
               <div className="flex items-center space-x-2">
                 <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-mono">
@@ -397,63 +405,48 @@ export default function FindingDetailView({
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-2">
               <span className="h-1.5 w-1.5 rounded-full bg-purple-400" />
-              <span>Verification Gate</span>
+              <span>Verification</span>
             </h2>
             <span className={`text-xs px-2.5 py-1 rounded font-bold font-mono ${
               gateDecision === 'VERIFIED'
                 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                 : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
             }`}>
-              {gateDecision === 'VERIFIED' ? 'VERIFIED' : 'NEEDS REVIEW'}
+              {gateDecision === 'VERIFIED' ? 'PASS' : gateDecision === 'FAILED' || gateDecision === 'REJECTED' ? 'FAIL' : 'REVIEW NEEDED'}
             </span>
           </div>
 
           <div className="p-3.5 bg-[#111724] border border-[#1e293b] rounded space-y-3 text-xs">
             <div className="text-slate-300">
-              {isRepaired
-                ? 'Verified against MSE checks. Invariant restored and regression test passed.'
-                : 'Requires patch application to satisfy bound invariants.'}
+              {gateDecision === 'VERIFIED'
+                ? 'All verification checks passed.'
+                : 'Review the checks below after applying the proposed change.'}
             </div>
 
             {/* Checklist */}
             <div className="space-y-1.5 pt-2 border-t border-[#1e293b]">
               {gateChecks.map((check, idx) => (
                 <div key={idx} className="flex items-center space-x-2 text-[11px]">
-                  <span className={check.passed ? 'text-emerald-400 font-bold' : 'text-slate-500'}>
-                    {check.passed ? '✓' : '○'}
+                  <span className={check.status === 'passed' ? 'text-emerald-400 font-bold' : check.status === 'skipped' ? 'text-slate-500' : 'text-red-400'}>
+                    {check.status === 'passed' ? '✓' : check.status === 'skipped' ? '○' : '✗'}
                   </span>
-                  <span className={check.passed ? 'text-slate-200' : 'text-slate-400'}>
-                    {check.name}
+                  <span className={check.status === 'passed' ? 'text-slate-200' : 'text-slate-400'}>
+                    {check.name}: {String(check.status || 'skipped').toUpperCase()}
                   </span>
                 </div>
               ))}
             </div>
 
-            {/* Verification Gate Action Buttons: [ View Evidence ] [ View Diff ] [ Export Report ] */}
-            <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-[#1e293b]">
-              <button
-                onClick={() => onJumpToSource(finding.file, finding.line)}
-                className="px-3 py-1.5 rounded bg-[#162032] hover:bg-[#1e293b] border border-[#263147] text-slate-200 font-medium text-xs transition"
-              >
-                View Evidence
-              </button>
-              {patch && (
-                <button
-                  onClick={() => onViewPatch(finding.file)}
-                  className="px-3 py-1.5 rounded bg-[#162032] hover:bg-[#1e293b] border border-[#263147] text-[#38bdf8] font-medium text-xs transition"
-                >
-                  View Diff
-                </button>
-              )}
-              {onNavigateTab && (
+            {onNavigateTab && (
+              <div className="pt-3 border-t border-[#1e293b]">
                 <button
                   onClick={() => onNavigateTab('report')}
                   className="px-3 py-1.5 rounded bg-[#162032] hover:bg-[#1e293b] border border-[#263147] text-purple-300 font-medium text-xs transition"
                 >
-                  Export Report
+                  View report
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </section>
 

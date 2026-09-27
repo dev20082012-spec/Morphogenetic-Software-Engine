@@ -11,15 +11,14 @@ export default function HeaderBar({
   allPatchesApplied = false,
   onApplyAllPatches,
   onChangeRepository,
-  onToggleTechnical,
-  isTechnicalOpen = false
 }) {
   const isRunning = status === 'running';
+  const sourceLabel = repositorySource === 'github' ? 'GITHUB' : repositorySource === 'zip' ? 'ZIP' : 'DEMO';
 
   return (
-    <header className="border-b border-[#263147] bg-[#0d131f] px-4 py-2.5 flex items-center justify-between shrink-0 select-none font-sans">
+    <header className="border-b border-[#263147] bg-[#0d131f] px-3 sm:px-4 py-2.5 flex flex-wrap items-center justify-between gap-y-2 shrink-0 select-none font-sans">
       {/* Left: Brand & Repository Context */}
-      <div className="flex items-center space-x-3">
+      <div className="min-w-0 flex items-center space-x-3">
         <div 
           onClick={onChangeRepository}
           className="flex items-center space-x-2 cursor-pointer group"
@@ -37,9 +36,9 @@ export default function HeaderBar({
 
         {/* Current Repository Chip */}
         <div className="flex items-center space-x-2 bg-[#111724] border border-[#263147] px-2.5 py-1 rounded text-xs">
-          <span className="font-semibold text-slate-200 font-mono">{repositoryName || 'repository'}</span>
+          <span className="font-semibold text-slate-200 font-mono truncate max-w-[28vw]">{repositoryName || 'repository'}</span>
           <span className="text-[10px] text-slate-400 font-medium px-1 rounded bg-[#162032] border border-[#24334d]">
-            {repositorySource === 'zip' ? 'ZIP' : 'DEMO'}
+            {sourceLabel}
           </span>
           <button
             onClick={onChangeRepository}
@@ -51,7 +50,7 @@ export default function HeaderBar({
       </div>
 
       {/* Right: Telemetry, Primary Actions & Technical Analysis Toggle */}
-      <div className="flex items-center space-x-2.5 text-xs">
+      <div className="flex flex-wrap items-center justify-end gap-2 text-xs">
         {/* Execution Duration Pill */}
         <div className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1 rounded bg-[#111724] border border-[#263147] text-slate-400 font-mono text-[11px]">
           <span>Duration:</span>
@@ -93,19 +92,6 @@ export default function HeaderBar({
           )}
         </button>
 
-        {/* Technical Drawer Toggle */}
-        <button
-          onClick={onToggleTechnical}
-          className={`px-2.5 py-1.5 rounded border transition flex items-center space-x-1.5 text-xs font-mono ${
-            isTechnicalOpen
-              ? 'bg-[#162032] border-[#38bdf8] text-[#38bdf8]'
-              : 'bg-[#111724] border-[#263147] text-slate-300 hover:text-white'
-          }`}
-          title="Toggle Progressive Disclosure of AST & Prover Internals"
-        >
-          <span>[&lt;/&gt;]</span>
-          <span className="hidden lg:inline">Technical Analysis</span>
-        </button>
       </div>
     </header>
   );

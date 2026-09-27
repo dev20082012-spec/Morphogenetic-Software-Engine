@@ -42,6 +42,14 @@ export function getAnalysisRuns() {
   }
 }
 
+export function getNextAnalysisRunId() {
+  const highestRunNumber = getAnalysisRuns().reduce((highest, run) => {
+    const match = /^RUN #(\d+)$/.exec(run?.id || '');
+    return match ? Math.max(highest, Number(match[1])) : highest;
+  }, 0);
+  return `RUN #${String(highestRunNumber + 1).padStart(3, '0')}`;
+}
+
 /**
  * Save an analysis run to history.
  *
@@ -50,20 +58,23 @@ export function getAnalysisRuns() {
  */
 export function saveAnalysisRun(run) {
   const existing = getAnalysisRuns();
-  const runNumber = existing.length + 1;
-  const formattedId = `RUN #${String(runNumber).padStart(3, '0')}`;
+  const formattedId = getNextAnalysisRunId();
 
   const runRecord = {
-    id: run.id || formattedId,
+    id: formattedId,
     repositoryName: run.repositoryName || 'repository',
     repositorySource: run.repositorySource || 'demo',
     timestamp: new Date().toISOString(),
+    startTime: run.startTime || run.timestamp || new Date().toISOString(),
     durationMs: run.durationMs || 0,
     filesCount: run.filesCount || 0,
     findingsCount: run.findingsCount || 0,
+    invariantViolations: run.invariantViolations || 0,
     counterexamplesCount: run.counterexamplesCount || 0,
     patchesCount: run.patchesCount || 0,
+    candidateRepairs: run.candidateRepairs || run.patchesCount || 0,
     verificationOutcome: run.verificationOutcome || 'VERIFIED',
+    decision: run.decision || null,
     snapshot: run.snapshot,
     pipelineResult: run.pipelineResult
   };

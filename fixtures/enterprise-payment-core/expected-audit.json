@@ -1,11 +1,11 @@
 {
   "fixtureName": "enterprise-payment-core",
-  "recordedAt": "2026-09-27T08:17:39.164Z",
+  "recordedAt": "2026-09-27T10:47:54.602Z",
   "summary": {
     "runId": "RUN #001",
     "repositoryName": "enterprise-payment-core",
     "repositorySource": "demo",
-    "analyzedAt": "2026-09-27T08:17:39.098Z",
+    "analyzedAt": "2026-09-27T10:47:54.576Z",
     "filesAnalyzed": 9,
     "sourceFilesAnalyzed": 6,
     "totalLines": 294,
@@ -25,9 +25,64 @@
     "patchesGenerated": 4,
     "verificationStatus": "VERIFIED",
     "verificationGate": "VERIFIED",
+    "decision": {
+      "status": "VERIFIED",
+      "reason": "All required MSE checks passed.",
+      "checks": [
+        {
+          "name": "Patch application",
+          "status": "passed",
+          "detail": "Applied 4 patch(es) to in-memory repository snapshot."
+        },
+        {
+          "name": "Post-patch Alpha analysis",
+          "status": "passed",
+          "detail": "Re-analyzed 6 source files in 1ms."
+        },
+        {
+          "name": "Post-patch Beta drift analysis",
+          "status": "passed",
+          "detail": "Drift analysis completed: 7 findings (was 8)."
+        },
+        {
+          "name": "Post-patch invariant evaluation",
+          "status": "passed",
+          "detail": "Invariant evaluation: 3 violated (was 4), 3 satisfied."
+        },
+        {
+          "name": "Finding resolution",
+          "status": "passed",
+          "detail": "2 finding(s) resolved by patches (10 → 8)."
+        },
+        {
+          "name": "No new invariant violations",
+          "status": "passed",
+          "detail": "Violated invariants: 3 (was 4). No new violations introduced."
+        },
+        {
+          "name": "Invariant improvement",
+          "status": "passed",
+          "detail": "1 invariant(s) restored from violated to satisfied."
+        }
+      ],
+      "evidence": [
+        {
+          "file": "verification",
+          "context": "Findings reduced from 10 to 8"
+        }
+      ],
+      "affectedFiles": [
+        "src/api/webhooks.ts",
+        "src/security/auth.ts",
+        "src/config.ts",
+        "README.md",
+        ".env.example"
+      ],
+      "confidence": "high"
+    },
     "checksPassed": 7,
     "checksTotal": 7,
-    "totalDurationMs": 23
+    "totalDurationMs": 8
   },
   "findings": [
     {

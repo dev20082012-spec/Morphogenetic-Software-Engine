@@ -7,25 +7,19 @@ export default function VerificationView({
   status,
   onNavigateTab,
   pipelineResult,
-  snapshot
+  snapshot,
+  decision
 }) {
-  const checks = verification?.checks || [];
-  const isVerified = verification?.status === 'VERIFIED';
-  const isRejected = verification?.status === 'REJECTED' || verification?.status === 'FAILED';
+  const checks = decision?.checks || verification?.checks || [];
+  const decisionStatus = decision?.status || verification?.status;
+  const isVerified = decisionStatus === 'VERIFIED';
+  const isRejected = decisionStatus === 'REJECTED' || decisionStatus === 'FAILED';
   const isPending = !isVerified && !isRejected;
   const durationMs = verification?.durationMs ?? 0;
   const invariantList = invariants?.invariants || [];
   const totalDuration = pipelineResult?.totalDurationMs ?? 0;
   const filesCount = snapshot?.files?.length || 0;
   const findingsCount = (pipelineResult?.analysis?.findings?.length || 0) + (pipelineResult?.drift?.findings?.length || 0);
-
-  const gateChecks = [
-    { name: 'Counterexample resolved', passed: isVerified },
-    { name: 'Regression test passes', passed: isVerified },
-    { name: 'Invariant restored', passed: isVerified },
-    { name: 'Build check passes', passed: true },
-    { name: 'No newly detected supported violation', passed: true }
-  ];
 
   const failedChecks = checks.filter(c => c.status === 'failed');
 
@@ -58,7 +52,7 @@ export default function VerificationView({
                 ? 'All required checks passed against in-memory repository contracts. Invariants restored with no newly introduced issues.'
                 : isRejected
                 ? 'Verification could not pass. See failed checks below for details.'
-                : `${checks.length > 0 ? checks.filter(c => c.status === 'passed').length : 0} of ${gateChecks.length} checks require patch application to satisfy bound invariants.`}
+                : `${checks.filter(c => c.status === 'passed').length} of ${checks.length} checks passed.`}
             </p>
           </div>
 
@@ -92,23 +86,28 @@ export default function VerificationView({
         {/* Verification Gate Checklist */}
         <div className="pt-4 border-t border-[#1e293b]">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
-            {gateChecks.map((check, idx) => (
+            {checks.map((check, idx) => {
+              const passed = check.status === 'passed';
+              const skipped = check.status === 'skipped';
+              const statusLabel = String(check.status || 'skipped').toUpperCase();
+              return (
               <div
                 key={idx}
                 className={`flex items-center space-x-2 p-3 rounded bg-[#111724} border ${
-                  check.passed
+                  passed
                     ? 'border-emerald-500/30 bg-emerald-500/10'
                     : 'border-[#263147]'
                 }`}
               >
-                <span className={check.passed ? 'text-emerald-400 font-bold text-lg' : 'text-slate-500 text-lg'}>
-                  {check.passed ? '✓' : '✗'}
+                <span className={passed ? 'text-emerald-400 font-bold text-lg' : skipped ? 'text-slate-400 text-lg' : 'text-red-400 text-lg'}>
+                  {passed ? '✓' : skipped ? '○' : '✗'}
                 </span>
-                <span className={check.passed ? 'text-slate-200' : 'text-slate-400'}>
-                  {check.name}
+                <span className={passed ? 'text-slate-200' : 'text-slate-400'}>
+                  {check.name} — {statusLabel}
                 </span>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Action Buttons */}
@@ -163,22 +162,24 @@ export default function VerificationView({
             Executed Verification Checks ({checks.length})
           </span>
           <span className="text-[10px] text-slate-400">
-            {checks.filter(c => c.status === 'passed').length} Passed / {checks.filter(c => c.status === 'failed').length} Failed
+            {checks.filter(c => c.status === 'passed').length} PASS / {checks.filter(c => c.status === 'failed').length} FAIL / {checks.filter(c => c.status === 'skipped').length} SKIPPED
           </span>
         </div>
 
         <div className="divide-y divide-[#1e293b]">
           {checks.map((check, idx) => {
             const passed = check.status === 'passed';
+            const skipped = check.status === 'skipped';
+            const statusLabel = String(check.status || 'skipped').toUpperCase();
 
             return (
               <div key={idx} className="p-4 flex items-start justify-between hover:bg-[#111724] transition">
                 <div className="space-y-1 pr-4">
                   <div className="flex items-center space-x-2">
                     <span className={`text-xs font-bold ${
-                      passed ? 'text-emerald-400' : 'text-red-400'
+                      passed ? 'text-emerald-400' : skipped ? 'text-slate-400' : 'text-red-400'
                     }`}>
-                      {passed ? '✓' : '✗'}
+                      {passed ? '✓' : skipped ? '○' : '✗'}
                     </span>
                     <span className="text-xs font-semibold text-slate-200">
                       {check.name}
@@ -193,9 +194,9 @@ export default function VerificationView({
                   <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase border ${
                     passed
                       ? 'bg-[#13281c] text-[#4ade80] border-[#166534]'
-                      : 'bg-[#2a1215] text-[#f87171] border-[#7f1d1d]'
+                      : skipped ? 'bg-slate-800 text-slate-400 border-slate-700' : 'bg-[#2a1215] text-[#f87171] border-[#7f1d1d]'
                   }`}>
-                    {passed ? 'PASSED' : 'FAILED'}
+                    {statusLabel}
                   </span>
                 </div>
               </div>

@@ -7,6 +7,7 @@
  */
 
 import { calculateBlastRadius } from '../repositoryGraph/blastRadius.js';
+import { createDecision } from '../decision.js';
 
 /**
  * Generate complete MSE report.
@@ -19,6 +20,7 @@ import { calculateBlastRadius } from '../repositoryGraph/blastRadius.js';
  * @param {import('../counterexample/index.js').CounterexampleResult} params.counterexamples
  * @param {import('../patch/index.js').PatchSynthesisResult} params.patches
  * @param {import('../verify/index.js').VerificationResult} params.verification
+ * @param {object} params.decision
  * @param {number} params.totalDurationMs
  * @param {string} [params.runId]
  * @returns {ReportResult}
@@ -31,9 +33,11 @@ export function generateReport({
   counterexamples,
   patches,
   verification,
+  decision: suppliedDecision,
   totalDurationMs,
   runId = 'RUN #001'
 }) {
+  const decision = suppliedDecision || createDecision({ verification, analysis, drift, patches });
   const allFindings = [...analysis.findings, ...drift.findings];
   const criticalFindings = allFindings.filter(f => f.severity === 'CRITICAL');
 
@@ -69,15 +73,26 @@ export function generateReport({
     invariantsSatisfied: invariants.summary.satisfied,
     counterexamplesGenerated: counterexamples.summary.generated,
     patchesGenerated: patches.summary.generated,
-    verificationStatus: verification.status,
-    verificationGate: verification.status === 'VERIFIED' ? 'VERIFIED' : 'NEEDS REVIEW',
+    verificationStatus: decision.status,
+    verificationGate: decision.status,
+    decision,
     checksPassed: verification.checks.filter(c => c.status === 'passed').length,
     checksTotal: verification.checks.length,
     totalDurationMs,
   };
 
-  const json = buildJsonReport(summary, analysis, drift, invariants, counterexamples, patches, verification, findingsWithImpact);
-  const markdown = buildMarkdownReport(summary, findingsWithImpact, invariants, counterexamples, patches, verification);
+  const evidenceChains = findingsWithImpact.map(finding => ({
+    finding: { id: finding.id, title: finding.title, severity: finding.severity },
+    sourceEvidence: finding.sourceEvidence || [],
+    specificationEvidence: finding.documentationEvidence || [],
+    invariant: invariants.invariants.find(inv => inv.linkedFindingIds?.includes(finding.id)) || null,
+    counterexample: counterexamples.counterexamples.find(cx => cx.findingId === finding.id) || null,
+    impact: finding.blastRadius,
+    candidatePatch: patches.patches.find(patch => patch.findingId === finding.id) || null,
+    verification: decision,
+  }));
+  const json = buildJsonReport(summary, analysis, drift, invariants, counterexamples, patches, verification, decision, findingsWithImpact, evidenceChains);
+  const markdown = buildMarkdownReport(summary, findingsWithImpact, invariants, counterexamples, patches, verification, decision, evidenceChains);
 
   return {
     json,
@@ -86,7 +101,7 @@ export function generateReport({
   };
 }
 
-function buildJsonReport(summary, analysis, drift, invariants, counterexamples, patches, verification, findingsWithImpact) {
+function buildJsonReport(summary, analysis, drift, invariants, counterexamples, patches, verification, decision, findingsWithImpact, evidenceChains) {
   return {
     schemaVersion: '1.0.0',
     runId: summary.runId,
@@ -98,6 +113,7 @@ function buildJsonReport(summary, analysis, drift, invariants, counterexamples, 
       environmentVariables: analysis.environmentVariables,
       findings: findingsWithImpact,
     },
+    evidenceChains,
     drift: {
       stats: drift.stats,
       findings: drift.findings,
@@ -130,6 +146,7 @@ function buildJsonReport(summary, analysis, drift, invariants, counterexamples, 
       checks: verification.checks,
       durationMs: verification.durationMs,
     },
+    decision,
     limitations: [
       'Static Analysis Scope: Call-graph and blast radius analysis are computed using static ES/CJS module imports and Express route mount patterns. Dynamic runtime imports cannot be statically determined.',
       'In-Memory RAM Operation: Patches and invariant verifications occur in browser memory and do not write to the physical filesystem unless diffs are exported.',
@@ -138,12 +155,13 @@ function buildJsonReport(summary, analysis, drift, invariants, counterexamples, 
   };
 }
 
-function buildMarkdownReport(summary, allFindings, invariants, counterexamples, patches, verification) {
+function buildMarkdownReport(summary, allFindings, invariants, counterexamples, patches, verification, decision, evidenceChains) {
   const lines = [];
 
   lines.push(`# MSE Analysis Report: ${summary.repositoryName}`);
   lines.push(`**Run ID:** \`${summary.runId}\` | **Generated:** ${summary.analyzedAt}`);
   lines.push(`**Repository Source:** ${summary.repositorySource} | **Verification Gate:** **${summary.verificationGate}**`);
+  lines.push(`**Decision:** ${decision.status} — ${decision.reason}`);
   lines.push('');
 
   // Executive Summary Table
@@ -244,12 +262,29 @@ function buildMarkdownReport(summary, allFindings, invariants, counterexamples, 
   // Verification Gate Checks
   lines.push('## Verification Gate Checks');
   lines.push('');
+
+  lines.push('## Final Decision');
+  lines.push('');
+  lines.push(`**${decision.status}** — ${decision.reason}`);
+  lines.push(`**Confidence:** ${decision.confidence}`);
+  lines.push(`**Affected files:** ${decision.affectedFiles.join(', ') || 'None identified from current evidence.'}`);
+  lines.push('');
+
+  lines.push('## Evidence Chains');
+  lines.push('');
+  for (const chain of evidenceChains) {
+    lines.push(`- **${chain.finding.id}: ${chain.finding.title}** — ${chain.sourceEvidence.length} source evidence item(s), ${chain.counterexample ? 'counterexample linked' : 'no counterexample linked'}, ${chain.candidatePatch ? 'patch linked' : 'no patch linked'}.`);
+  }
+  lines.push('');
+
+  lines.push('> MSE does not only generate a change. It builds evidence around the change before accepting it.');
+  lines.push('');
   lines.push(`**Decision:** **${summary.verificationGate}** (${summary.checksPassed}/${summary.checksTotal} passed)`);
   lines.push('');
   lines.push('| Check | Status | Detail |');
   lines.push('|-------|--------|--------|');
   for (const check of verification.checks) {
-    const icon = check.status === 'passed' ? '✅' : '❌';
+    const icon = check.status === 'passed' ? '✅' : check.status === 'skipped' ? '⏭️' : '❌';
     lines.push(`| ${check.name} | ${icon} ${check.status} | ${check.detail} |`);
   }
   lines.push('');

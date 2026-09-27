@@ -44,7 +44,7 @@ export default function VerificationConsole({
               ? 'bg-[#1b2b45] text-[#38bdf8] border-[#38bdf8]'
               : 'bg-[#111724] text-slate-400 border border-[#263147]'
           }`}>
-            {status === 'running' ? 'ANALYSIS PIPELINE RUNNING' : status === 'converged' || status === 'verified' ? 'HOMEOSTASIS CONVERGED (0 UNVERIFIED)' : 'ENGINE IDLE (READY)'}
+            {status === 'running' ? 'ANALYSIS RUNNING' : status === 'verified' ? 'ANALYSIS COMPLETE' : 'ENGINE IDLE'}
           </span>
         </div>
 

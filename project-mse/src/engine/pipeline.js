@@ -16,6 +16,7 @@ import { generateCounterexamples } from './counterexample/index.js';
 import { synthesizePatches } from './patch/index.js';
 import { verifyPatches } from './verify/index.js';
 import { generateReport } from './report/index.js';
+import { createDecision } from './decision.js';
 
 /**
  * @typedef {{
@@ -112,6 +113,7 @@ export function runPipeline(snapshot, options = {}) {
 
   // Phase 7: Report Generation
   const totalDurationMs = Math.round(performance.now() - startTime);
+  const decision = createDecision({ verification: verificationResult, analysis, drift, patches: patchResult });
   emitEvent('REPORT', 'running', 'Generating report...');
   let report;
   try {
@@ -123,6 +125,7 @@ export function runPipeline(snapshot, options = {}) {
       counterexamples: counterexampleResult,
       patches: patchResult,
       verification: verificationResult,
+      decision,
       totalDurationMs,
       runId: options.runId || 'RUN #001',
     });
@@ -142,6 +145,7 @@ export function runPipeline(snapshot, options = {}) {
     counterexamples: counterexampleResult,
     patches: patchResult,
     verification: verificationResult,
+    decision,
     report,
     telemetry: events,
     totalDurationMs,
@@ -242,6 +246,7 @@ export async function runPipelineAsync(snapshot, options = {}) {
 
   // Stage 7: COMPLETE (Report Generation)
   const totalDurationMs = Math.round(performance.now() - startTime);
+  const decision = createDecision({ verification: verificationResult, analysis, drift, patches: patchResult });
   emitEvent('COMPLETE', 'running', 'Compiling unified JSON & Markdown audit reports...');
   let report;
   try {
@@ -253,6 +258,7 @@ export async function runPipelineAsync(snapshot, options = {}) {
       counterexamples: counterexampleResult,
       patches: patchResult,
       verification: verificationResult,
+      decision,
       totalDurationMs,
       runId: options.runId || 'RUN #001',
     });
@@ -270,6 +276,7 @@ export async function runPipelineAsync(snapshot, options = {}) {
     counterexamples: counterexampleResult,
     patches: patchResult,
     verification: verificationResult,
+    decision,
     report,
     telemetry: events,
     totalDurationMs,

@@ -86,26 +86,26 @@ function formatCounterexample(rawCx, finding, primaryFile) {
 /**
  * Build the structured FindingEvidenceChain model.
  */
-function buildEvidenceChain(findingId, title, sourceEvidence, docEvidence, invariant, counterexample, patch, isRepaired) {
-  const checks = [
-    { name: 'Original counterexample no longer reproduces', passed: isRepaired },
-    { name: 'Synthesized regression test passes', passed: isRepaired },
-    { name: 'Supported system invariant satisfied', passed: isRepaired },
-    { name: 'AST syntax & build check passes', passed: true },
-    { name: 'No newly detected supported issues introduced', passed: true }
-  ];
+function buildEvidenceChain(findingId, title, sourceEvidence, docEvidence, invariant, counterexample, patch, impact, verification, isRepaired) {
 
   return {
+    finding: {
+      id: findingId,
+      title,
+    },
     findingId,
     title,
     sourceEvidence,
     documentationEvidence: docEvidence,
+    specificationEvidence: docEvidence,
     invariant: invariant || null,
     counterexample: counterexample || null,
+    impact: impact || null,
     patch: patch || null,
+    candidatePatch: patch || null,
     verification: {
-      status: isRepaired ? 'VERIFIED' : 'NEEDS_REVIEW',
-      checks
+      status: isRepaired && verification?.status === 'VERIFIED' ? 'VERIFIED' : 'NEEDS_REVIEW',
+      checks: (verification?.checks || []).slice(0, 5)
     }
   };
 }
@@ -141,6 +141,8 @@ export function getUnifiedFindings(pipelineResult, appliedPatchIds = [], snapsho
       associatedInv,
       counterexample,
       associatedPatch,
+      blastRadius,
+      pipelineResult.verification,
       isRepaired
     );
 
@@ -192,6 +194,8 @@ export function getUnifiedFindings(pipelineResult, appliedPatchIds = [], snapsho
       null,
       counterexample,
       associatedPatch,
+      blastRadius,
+      pipelineResult.verification,
       isRepaired
     );
 

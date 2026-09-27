@@ -11,7 +11,9 @@ export default function ChangeReviewView({
   onReRunVerification,
   targetFile,
   repoName = 'repository',
-  onNavigateTab
+  onNavigateTab,
+  verification,
+  decision
 }) {
   const patchList = patches?.patches || [];
 
@@ -33,7 +35,7 @@ export default function ChangeReviewView({
     return (
       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center font-sans bg-[#090d16] text-slate-400 space-y-2">
         <span className="text-2xl">✨</span>
-        <h3 className="text-sm font-bold text-slate-200">No Candidate Changes Pending</h3>
+        <h3 className="text-sm font-bold text-slate-200">No Fixes to Review</h3>
         <p className="text-xs max-w-md text-slate-500">
           The codebase satisfies all bound invariants. No atomic repair syntheses were generated.
         </p>
@@ -58,13 +60,7 @@ export default function ChangeReviewView({
   // Verification Gate Decision Model
   const gateDecision = isApplied ? 'VERIFIED' : 'NEEDS_REVIEW';
 
-  const verificationChecks = [
-    { name: 'Original counterexample no longer reproduces', passed: isApplied },
-    { name: 'Synthesized regression test passes', passed: isApplied },
-    { name: 'Supported system invariant restored', passed: isApplied },
-    { name: 'AST syntax & build check passes', passed: true },
-    { name: 'No newly detected supported issues introduced', passed: true }
-  ];
+  const verificationChecks = decision?.checks || verification?.checks || [];
 
   return (
     <div className="flex-1 flex overflow-hidden font-sans text-xs bg-[#090d16] text-slate-200">
@@ -72,10 +68,10 @@ export default function ChangeReviewView({
       <div className="w-80 border-r border-[#263147] bg-[#0d131f] flex flex-col shrink-0">
         <div className="p-3 border-b border-[#263147] flex items-center justify-between">
           <span className="text-xs font-bold text-white uppercase tracking-wider">
-            Candidate Changes ({patchList.length})
+            Review Fixes ({patchList.length})
           </span>
           <span className="text-[10px] bg-[#13281c] text-[#4ade80] border border-[#166534] px-1.5 py-0.2 rounded font-bold">
-            CEGIS Prover
+            Generated fix
           </span>
         </div>
 
@@ -127,7 +123,7 @@ export default function ChangeReviewView({
             disabled={allApplied}
             className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white font-bold rounded-md text-xs shadow-sm transition"
           >
-            {allApplied ? 'All Changes Applied in RAM' : 'Apply All Candidate Changes'}
+            {allApplied ? 'All Fixes Applied' : 'Apply All Fixes'}
           </button>
           <button
             onClick={() => downloadPatches(patchList, repoName)}
@@ -218,11 +214,11 @@ export default function ChangeReviewView({
                   <span
                     key={i}
                     className={`px-2 py-0.5 rounded flex items-center space-x-1 ${
-                      c.passed ? 'bg-emerald-950/40 text-emerald-400 font-bold' : 'bg-slate-800 text-slate-400'
+                      c.status === 'passed' ? 'bg-emerald-950/40 text-emerald-400 font-bold' : c.status === 'skipped' ? 'bg-slate-800 text-slate-400' : 'bg-red-950/40 text-red-400'
                     }`}
                   >
-                    <span>{c.passed ? '✓' : '○'}</span>
-                    <span>{c.name}</span>
+                    <span>{c.status === 'passed' ? '✓' : c.status === 'skipped' ? '○' : '✗'}</span>
+                    <span>{c.name}: {String(c.status || 'skipped').toUpperCase()}</span>
                   </span>
                 ))}
               </div>

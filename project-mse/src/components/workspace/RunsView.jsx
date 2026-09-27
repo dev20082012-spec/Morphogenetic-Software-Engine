@@ -71,14 +71,16 @@ export default function RunsView({
                   <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase border ${
                     run.verificationOutcome === 'VERIFIED'
                       ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                      : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                      : run.verificationOutcome === 'REJECTED'
+                        ? 'bg-red-500/20 text-red-400 border-red-500/30'
+                        : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
                   }`}>
                     {run.verificationOutcome}
                   </span>
                 </div>
 
                 {/* Metrics Row */}
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs pt-1 font-mono text-slate-400">
+                <div className="grid grid-cols-2 sm:grid-cols-7 gap-2 text-xs pt-1 font-mono text-slate-400">
                   <div>
                     <span className="text-[10px] text-slate-500 block uppercase">Duration</span>
                     <span className="text-white font-semibold">{run.durationMs}ms</span>
@@ -94,6 +96,16 @@ export default function RunsView({
                     <span className={run.findingsCount > 0 ? 'text-amber-400 font-semibold' : 'text-emerald-400 font-semibold'}>
                       {run.findingsCount}
                     </span>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] text-slate-500 block uppercase">Violations</span>
+                    <span className="text-red-300 font-semibold">{run.invariantViolations ?? 0}</span>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] text-slate-500 block uppercase">Counterexamples</span>
+                    <span className="text-white font-semibold">{run.counterexamplesCount ?? 0}</span>
                   </div>
 
                   <div>

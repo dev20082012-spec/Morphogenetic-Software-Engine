@@ -7,7 +7,7 @@
  * 3. Verify the original finding is resolved
  * 4. Verify no supported invariant is newly violated
  *
- * Reports: "Verified against MSE checks" — NOT "mathematically proven"
+ * Reports: "Verified against MSE checks" — not a claim of complete correctness.
  */
 
 import { analyzeRepository } from '../repositoryGraph/index.js';

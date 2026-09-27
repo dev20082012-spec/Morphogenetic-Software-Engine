@@ -434,17 +434,17 @@ export const UNIFIED_DIFFS = {
         lines: [
           { type: 'context', oldNum: 4, newNum: 4, text: "export const webhookRouter = express.Router();" },
           { type: 'context', oldNum: 5, newNum: 5, text: "" },
-          { type: 'remove',  oldNum: 6, newNum: null, text: "-webhookRouter.post('/github', async (req, res) => {" },
-          { type: 'remove',  oldNum: 7, newNum: null, text: "-  const event = req.headers['x-github-event'] || 'unknown';" },
-          { type: 'add',     oldNum: null, newNum: 6, text: "+import { verifyWebhookSignature } from '../controllers/webhookController.js';" },
-          { type: 'add',     oldNum: null, newNum: 7, text: "+" },
-          { type: 'add',     oldNum: null, newNum: 8, text: "+webhookRouter.post('/github', async (req, res) => {" },
-          { type: 'add',     oldNum: null, newNum: 9, text: "+  const sig = req.headers['x-hub-signature-256'];" },
-          { type: 'add',     oldNum: null, newNum: 10, text: "+  const secret = process.env.WEBHOOK_SECRET;" },
-          { type: 'add',     oldNum: null, newNum: 11, text: "+  if (!verifyWebhookSignature(JSON.stringify(req.body), sig, secret)) {" },
-          { type: 'add',     oldNum: null, newNum: 12, text: "+    return res.status(401).json({ error: 'Invalid or missing HMAC signature' });" },
-          { type: 'add',     oldNum: null, newNum: 13, text: "+  }" },
-          { type: 'add',     oldNum: null, newNum: 14, text: "+  const event = req.headers['x-github-event'] || 'unknown';" },
+          { type: 'remove', oldNum: 6, newNum: null, text: "-webhookRouter.post('/github', async (req, res) => {" },
+          { type: 'remove', oldNum: 7, newNum: null, text: "-  const event = req.headers['x-github-event'] || 'unknown';" },
+          { type: 'add', oldNum: null, newNum: 6, text: "+import { verifyWebhookSignature } from '../controllers/webhookController.js';" },
+          { type: 'add', oldNum: null, newNum: 7, text: "+" },
+          { type: 'add', oldNum: null, newNum: 8, text: "+webhookRouter.post('/github', async (req, res) => {" },
+          { type: 'add', oldNum: null, newNum: 9, text: "+  const sig = req.headers['x-hub-signature-256'];" },
+          { type: 'add', oldNum: null, newNum: 10, text: "+  const secret = process.env.WEBHOOK_SECRET;" },
+          { type: 'add', oldNum: null, newNum: 11, text: "+  if (!verifyWebhookSignature(JSON.stringify(req.body), sig, secret)) {" },
+          { type: 'add', oldNum: null, newNum: 12, text: "+    return res.status(401).json({ error: 'Invalid or missing HMAC signature' });" },
+          { type: 'add', oldNum: null, newNum: 13, text: "+  }" },
+          { type: 'add', oldNum: null, newNum: 14, text: "+  const event = req.headers['x-github-event'] || 'unknown';" },
           { type: 'context', oldNum: 8, newNum: 15, text: "   const payload = req.body;" },
           { type: 'context', oldNum: 9, newNum: 16, text: "   try {" },
           { type: 'context', oldNum: 10, newNum: 17, text: "     await processGitHubEvent(event, payload);" }
@@ -467,12 +467,12 @@ export const UNIFIED_DIFFS = {
         lines: [
           { type: 'context', oldNum: 14, newNum: 14, text: "   async beginTransaction() {" },
           { type: 'context', oldNum: 15, newNum: 15, text: "     state.inTransaction = true;" },
-          { type: 'remove',  oldNum: 16, newNum: null, text: "-    return this.query('BEGIN');" },
-          { type: 'add',     oldNum: null, newNum: 16, text: "+    await this.query('BEGIN');" },
-          { type: 'add',     oldNum: null, newNum: 17, text: "+    return {" },
-          { type: 'add',     oldNum: null, newNum: 18, text: "+      commit: () => this.commit()," },
-          { type: 'add',     oldNum: null, newNum: 19, text: "+      rollback: () => this.query('ROLLBACK').then(() => { state.inTransaction = false; })" },
-          { type: 'add',     oldNum: null, newNum: 20, text: "+    };" },
+          { type: 'remove', oldNum: 16, newNum: null, text: "-    return this.query('BEGIN');" },
+          { type: 'add', oldNum: null, newNum: 16, text: "+    await this.query('BEGIN');" },
+          { type: 'add', oldNum: null, newNum: 17, text: "+    return {" },
+          { type: 'add', oldNum: null, newNum: 18, text: "+      commit: () => this.commit()," },
+          { type: 'add', oldNum: null, newNum: 19, text: "+      rollback: () => this.query('ROLLBACK').then(() => { state.inTransaction = false; })" },
+          { type: 'add', oldNum: null, newNum: 20, text: "+    };" },
           { type: 'context', oldNum: 17, newNum: 21, text: "   }," }
         ]
       }
@@ -492,9 +492,9 @@ export const UNIFIED_DIFFS = {
         header: '@@ -5,4 +5,6 @@',
         lines: [
           { type: 'context', oldNum: 5, newNum: 5, text: " Configuration and Ports:" },
-          { type: 'remove',  oldNum: 6, newNum: null, text: "- - Service Port: 3000 (Divergence: code binds to port 8080)" },
-          { type: 'add',     oldNum: null, newNum: 6, text: "+ - Service Port: 8080 (Synchronized with AST server binding)" },
-          { type: 'add',     oldNum: null, newNum: 7, text: "+ - Living Spec Checksum: sha256:4f8a29b0e (Verified by Symbiote)" },
+          { type: 'remove', oldNum: 6, newNum: null, text: "- - Service Port: 3000 (Divergence: code binds to port 8080)" },
+          { type: 'add', oldNum: null, newNum: 6, text: "+ - Service Port: 8080 (Synchronized with AST server binding)" },
+          { type: 'add', oldNum: null, newNum: 7, text: "+ - Living Spec Checksum: sha256:4f8a29b0e (Verified by Symbiote)" },
           { type: 'context', oldNum: 7, newNum: 8, text: " - Auth Scheme: HMAC-SHA256 required for webhooks" }
         ]
       }

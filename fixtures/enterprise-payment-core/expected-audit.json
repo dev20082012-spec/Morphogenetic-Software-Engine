@@ -1,11 +1,11 @@
 {
   "fixtureName": "enterprise-payment-core",
-  "recordedAt": "2026-09-27T10:47:54.602Z",
+  "recordedAt": "2026-09-27T13:47:49.270Z",
   "summary": {
     "runId": "RUN #001",
     "repositoryName": "enterprise-payment-core",
     "repositorySource": "demo",
-    "analyzedAt": "2026-09-27T10:47:54.576Z",
+    "analyzedAt": "2026-09-27T13:47:49.240Z",
     "filesAnalyzed": 9,
     "sourceFilesAnalyzed": 6,
     "totalLines": 294,
@@ -82,7 +82,7 @@
     },
     "checksPassed": 7,
     "checksTotal": 7,
-    "totalDurationMs": 8
+    "totalDurationMs": 10
   },
   "findings": [
     {

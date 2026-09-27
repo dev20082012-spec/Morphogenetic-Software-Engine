@@ -4,15 +4,16 @@ export default function FindingsView({
   findings = [],
   onSelectFinding
 }) {
+  const safeFindings = Array.isArray(findings) ? findings : [];
   const [filter, setFilter] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const criticalCount = findings.filter(f => f.severity === 'CRITICAL' && !f.isRepaired).length;
-  const highCount = findings.filter(f => f.severity === 'HIGH' && !f.isRepaired).length;
-  const mediumCount = findings.filter(f => f.severity === 'MEDIUM' && !f.isRepaired).length;
-  const resolvedCount = findings.filter(f => f.isRepaired).length;
+  const criticalCount = safeFindings.filter(f => f?.severity === 'CRITICAL' && !f?.isRepaired).length;
+  const highCount = safeFindings.filter(f => f?.severity === 'HIGH' && !f?.isRepaired).length;
+  const mediumCount = safeFindings.filter(f => f?.severity === 'MEDIUM' && !f?.isRepaired).length;
+  const resolvedCount = safeFindings.filter(f => f?.isRepaired).length;
 
-  const filteredFindings = findings.filter(f => {
+  const filteredFindings = safeFindings.filter(f => {
     // Filter by tab
     if (filter === 'CRITICAL' && (f.severity !== 'CRITICAL' || f.isRepaired)) return false;
     if (filter === 'HIGH' && (f.severity !== 'HIGH' || f.isRepaired)) return false;
@@ -65,7 +66,7 @@ export default function FindingsView({
                 : 'text-slate-400 hover:text-white hover:bg-[#111724]'
             }`}
           >
-            All ({findings.length})
+            All ({safeFindings.length})
           </button>
 
           <button
@@ -175,6 +176,29 @@ export default function FindingsView({
                   <p className="text-xs text-slate-400 leading-relaxed">
                     {finding.description}
                   </p>
+                </div>
+
+                {/* Capability Journey Context Strip */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[10px] font-mono">
+                  <span className="px-1.5 py-0.5 rounded bg-[#38bdf8]/10 text-[#38bdf8] border border-[#38bdf8]/20">
+                    FIND: Detected
+                  </span>
+                  <span className={`px-1.5 py-0.5 rounded ${
+                    finding.sourceEvidence?.length > 0
+                      ? 'bg-amber-500/10 text-amber-300 border border-amber-500/20'
+                      : 'bg-slate-800 text-slate-500 border border-slate-700'
+                  }`}>
+                    EXPLAIN: {finding.sourceEvidence?.length > 0 ? `${finding.sourceEvidence.length} Evidence` : 'Implicit'}
+                  </span>
+                  <span className={`px-1.5 py-0.5 rounded ${
+                    finding.isRepaired
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                      : finding.patch
+                      ? 'bg-blue-500/10 text-blue-300 border border-blue-500/20'
+                      : 'bg-purple-500/10 text-purple-300 border border-purple-500/20'
+                  }`}>
+                    REPAIR &amp; VERIFY: {finding.isRepaired ? 'Repaired in RAM' : finding.patch ? 'Patch Available' : 'Manual Edit'}
+                  </span>
                 </div>
 
                 {/* Bottom Row: Actions */}

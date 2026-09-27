@@ -11,6 +11,7 @@
  */
 
 import { calculateBlastRadius } from '../engine/repositoryGraph/blastRadius.js';
+import { computeFindingCapabilities } from '../engine/capabilities.js';
 
 /**
  * @typedef {{
@@ -146,7 +147,7 @@ export function getUnifiedFindings(pipelineResult, appliedPatchIds = [], snapsho
       isRepaired
     );
 
-    return {
+    const findingObj = {
       id: f.id,
       origin: 'alpha',
       category: f.type === 'security' ? 'Security' : 'Behavior',
@@ -167,6 +168,9 @@ export function getUnifiedFindings(pipelineResult, appliedPatchIds = [], snapsho
       invariant: associatedInv,
       confidence: f.confidence || 'high'
     };
+
+    findingObj.capabilities = computeFindingCapabilities(findingObj, isRepaired, true, pipelineResult.verification);
+    return findingObj;
   });
 
   const driftFindings = (pipelineResult.drift?.findings || []).map((f) => {
@@ -199,7 +203,7 @@ export function getUnifiedFindings(pipelineResult, appliedPatchIds = [], snapsho
       isRepaired
     );
 
-    return {
+    const driftObj = {
       id: f.id,
       origin: 'beta',
       category: 'Documentation Drift',
@@ -219,6 +223,9 @@ export function getUnifiedFindings(pipelineResult, appliedPatchIds = [], snapsho
       patch: associatedPatch,
       confidence: f.confidence || 'high'
     };
+
+    driftObj.capabilities = computeFindingCapabilities(driftObj, isRepaired, true, pipelineResult.verification);
+    return driftObj;
   });
 
   return [...analysisFindings, ...driftFindings];

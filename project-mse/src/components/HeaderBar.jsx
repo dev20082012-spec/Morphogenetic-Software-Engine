@@ -20,9 +20,9 @@ export default function HeaderBar({
       {/* Left: Brand & Repository Context */}
       <div className="min-w-0 flex items-center space-x-3">
         <div 
-          onClick={onChangeRepository}
-          className="flex items-center space-x-2 cursor-pointer group"
-          title="Return to Home / Select Repository"
+          onClick={isRunning ? undefined : onChangeRepository}
+          className={`flex items-center space-x-2 ${isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer group'}`}
+          title={isRunning ? "Analysis running..." : "Return to Home / Select Repository"}
         >
           <div className="h-6 w-6 rounded bg-[#1e293b] border border-[#334155] flex items-center justify-center font-mono font-bold text-xs text-[#38bdf8] group-hover:border-[#38bdf8] transition">
             M
@@ -41,8 +41,10 @@ export default function HeaderBar({
             {sourceLabel}
           </span>
           <button
-            onClick={onChangeRepository}
-            className="text-[11px] text-[#38bdf8] hover:underline pl-1"
+            onClick={isRunning ? undefined : onChangeRepository}
+            disabled={isRunning}
+            className="text-[11px] text-[#38bdf8] hover:underline pl-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:no-underline"
+            title={isRunning ? "Disabled while analysis is running" : "Change repository"}
           >
             Switch
           </button>
@@ -58,7 +60,7 @@ export default function HeaderBar({
         </div>
 
         {/* Findings Count Pill */}
-        {findingsCount > 0 && (
+        {findingsCount > 0 && !isRunning && (
           <div className="hidden sm:flex items-center space-x-1 px-2.5 py-1 rounded bg-[#111724] border border-[#263147] text-[11px] font-mono">
             <span className="text-slate-400">Findings:</span>
             <span className="text-red-400 font-bold">{findingsCount}</span>
@@ -66,11 +68,11 @@ export default function HeaderBar({
         )}
 
         {/* Apply All Patches Quick Action if available */}
-        {hasPatches && !allPatchesApplied && (
+        {hasPatches && !allPatchesApplied && !isRunning && (
           <button
             onClick={onApplyAllPatches}
             disabled={isRunning}
-            className="hidden md:flex px-3 py-1.5 rounded bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs transition items-center space-x-1 shadow-sm"
+            className="hidden md:flex px-3 py-1.5 rounded bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs transition items-center space-x-1 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <span>Apply All Fixes</span>
           </button>
@@ -78,9 +80,9 @@ export default function HeaderBar({
 
         {/* Primary Run Audit Button */}
         <button
-          onClick={onRunAudit}
+          onClick={isRunning ? undefined : onRunAudit}
           disabled={isRunning}
-          className="px-3.5 py-1.5 rounded bg-[#38bdf8] hover:bg-[#0ea5e9] text-[#090d16] font-bold text-xs shadow-sm transition flex items-center space-x-1.5 disabled:opacity-50"
+          className="px-3.5 py-1.5 rounded bg-[#38bdf8] hover:bg-[#0ea5e9] text-[#090d16] font-bold text-xs shadow-sm transition flex items-center space-x-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isRunning ? (
             <>

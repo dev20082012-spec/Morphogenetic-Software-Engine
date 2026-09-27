@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { parseUnifiedDiff } from '../../utils/diffUtils';
 import EvidenceChainView from './EvidenceChainView';
 import BlastRadiusView from './BlastRadiusView';
+import { computeFindingCapabilities } from '../../engine/capabilities.js';
 
 export default function FindingDetailView({
   finding,
@@ -9,10 +10,15 @@ export default function FindingDetailView({
   onJumpToSource,
   onViewPatch,
   onApplyPatch,
+  onRevertPatch,
   onVerifyFix,
   onNavigateTab,
   verification,
-  decision
+  decision,
+  capabilities: _capabilities,
+  isWorkingRevisionVerified = false,
+  workingRevisionId,
+  testedRevisionId
 }) {
   const [showFullTest, setShowFullTest] = useState(false);
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
@@ -40,6 +46,13 @@ export default function FindingDetailView({
   const gateDecision = decision?.status || verification?.status || 'PENDING';
   const gateChecks = decision?.checks || verification?.checks || [];
 
+  const findingCaps = finding.capabilities || computeFindingCapabilities(
+    finding,
+    isRepaired,
+    true,
+    decision || verification
+  );
+
   return (
     <div className="flex-1 flex flex-col font-sans bg-[#090d16] text-slate-200 overflow-hidden">
       {/* Top Header & Navigation */}
@@ -53,10 +66,10 @@ export default function FindingDetailView({
             <span>Back to Findings</span>
           </button>
 
-          {/* Action Bar */}
+          {/* Action Bar (Requirement 5) */}
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => onJumpToSource(finding.file, finding.line)}
+              onClick={() => onJumpToSource(finding.file, finding.line, finding, 'view')}
               className="px-3 py-1.5 rounded-md bg-[#111724] hover:bg-[#1e293b] border border-[#263147] text-slate-200 text-xs font-medium transition"
             >
               View Source
@@ -67,18 +80,16 @@ export default function FindingDetailView({
                 onClick={() => onViewPatch(finding.file)}
                 className="px-3 py-1.5 rounded-md bg-[#111724] hover:bg-[#1e293b] border border-[#263147] text-slate-200 text-xs font-medium transition"
               >
-                View Patch Diff
+                View Diff
               </button>
             )}
 
-            {counterexample && (
-              <button
-                onClick={() => document.getElementById('counterexample-section')?.scrollIntoView({ behavior: 'smooth' })}
-                className="px-3 py-1.5 rounded-md bg-[#111724] hover:bg-[#1e293b] border border-[#263147] text-slate-200 text-xs font-medium transition"
-              >
-                View Counterexample
-              </button>
-            )}
+            <button
+              onClick={onVerifyFix}
+              className="px-3 py-1.5 rounded-md bg-[#1e293b] hover:bg-[#334155] border border-[#38bdf8] text-[#38bdf8] text-xs font-bold transition flex items-center space-x-1"
+            >
+              <span>Test Changes</span>
+            </button>
 
             {patch && !isRepaired && (
               <button
@@ -89,11 +100,21 @@ export default function FindingDetailView({
               </button>
             )}
 
+            {patch && isRepaired && onRevertPatch && (
+              <button
+                onClick={() => onRevertPatch(patch)}
+                className="px-3.5 py-1.5 rounded-md bg-red-950/40 hover:bg-red-900/60 border border-red-500/40 text-red-300 font-bold text-xs transition"
+              >
+                Revert Patch
+              </button>
+            )}
+
             <button
-              onClick={onVerifyFix}
-              className="px-3 py-1.5 rounded-md bg-[#1e293b] hover:bg-[#334155] border border-[#38bdf8] text-[#38bdf8] text-xs font-semibold transition"
+              onClick={() => onJumpToSource(finding.file, finding.line, finding, 'edit')}
+              className="px-2.5 py-1.5 rounded-md bg-[#111724] hover:bg-[#1e293b] border border-slate-700 text-slate-400 text-xs font-medium transition"
+              title="Open source editor"
             >
-              Verify Fix
+              Edit Source
             </button>
           </div>
         </div>
@@ -130,6 +151,103 @@ export default function FindingDetailView({
 
       {/* Main Narrative Body */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6 max-w-4xl">
+        {/* CAPABILITY PIPELINE COVERAGE */}
+        <section className="bg-[#0d131f] border border-[#263147] rounded-lg p-5 space-y-3.5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center space-x-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#38bdf8]" />
+              <span>Finding Capability Coverage</span>
+            </h2>
+            <span className="text-[10px] text-slate-400 font-mono">
+              FIND • EXPLAIN • REPAIR &amp; VERIFY
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+            {/* 1. FIND STAGE */}
+            <div className="p-3 bg-[#111724] border border-[#1e293b] rounded space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono font-bold text-[#38bdf8]">1. FIND</span>
+                <span className="text-[10px] text-emerald-400 font-bold">✓ DETECTED</span>
+              </div>
+              <div className="space-y-1 text-[11px]">
+                <div className="flex items-center space-x-1.5 text-slate-300">
+                  <span className="text-emerald-400 font-bold">✓</span>
+                  <span>AST Risk Pattern Identified</span>
+                </div>
+                <div className="flex items-center space-x-1.5 text-slate-300">
+                  <span className="text-emerald-400 font-bold">✓</span>
+                  <span>Severity: <strong className="text-white">{finding.severity}</strong></span>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. EXPLAIN STAGE */}
+            <div className="p-3 bg-[#111724] border border-[#1e293b] rounded space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono font-bold text-amber-400">2. EXPLAIN</span>
+                <span className="text-[10px] text-emerald-400 font-bold">✓ TRACED</span>
+              </div>
+              <div className="space-y-1 text-[11px]">
+                <div className="flex items-center space-x-1.5 text-slate-300">
+                  <span className={findingCaps.explain.hasSourceEvidence ? 'text-emerald-400 font-bold' : 'text-slate-500'}>
+                    {findingCaps.explain.hasSourceEvidence ? '✓' : '○'}
+                  </span>
+                  <span>Source Evidence: {findingCaps.explain.hasSourceEvidence ? `${finding.file}:${finding.line}` : 'None'}</span>
+                </div>
+                <div className="flex items-center space-x-1.5 text-slate-300">
+                  <span className={findingCaps.explain.hasInvariant ? 'text-emerald-400 font-bold' : 'text-slate-500'}>
+                    {findingCaps.explain.hasInvariant ? '✓' : '○'}
+                  </span>
+                  <span>Invariant: {findingCaps.explain.hasInvariant ? (finding.invariant?.id || 'Defined') : 'Implicit AST Invariant'}</span>
+                </div>
+                <div className="flex items-center space-x-1.5 text-slate-300">
+                  <span className={findingCaps.explain.hasCounterexample ? 'text-emerald-400 font-bold' : 'text-slate-500'}>
+                    {findingCaps.explain.hasCounterexample ? '✓' : '○'}
+                  </span>
+                  <span>Counterexample: {findingCaps.explain.hasCounterexample ? 'Scenario Reproduced' : 'Static Pattern'}</span>
+                </div>
+                <div className="flex items-center space-x-1.5 text-slate-300">
+                  <span className={findingCaps.explain.hasBlastRadius ? 'text-emerald-400 font-bold' : 'text-slate-500'}>
+                    {findingCaps.explain.hasBlastRadius ? '✓' : '○'}
+                  </span>
+                  <span>Blast Radius: {findingCaps.explain.hasBlastRadius ? `${finding.blastRadius?.dependents?.length || 0} downstream files` : 'Single file scope'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. REPAIR & VERIFY STAGE */}
+            <div className="p-3 bg-[#111724] border border-[#1e293b] rounded space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono font-bold text-emerald-400">3. REPAIR &amp; VERIFY</span>
+                <span className={`text-[10px] font-bold ${
+                  findingCaps.repairVerify.isVerified ? 'text-emerald-400' : isRepaired ? 'text-blue-400' : 'text-amber-400'
+                }`}>
+                  {findingCaps.repairVerify.isVerified ? '✓ VERIFIED' : isRepaired ? 'APPLIED IN RAM' : 'REPAIR READY'}
+                </span>
+              </div>
+              <div className="space-y-1 text-[11px]">
+                <div className="flex items-center space-x-1.5 text-slate-300">
+                  <span className={findingCaps.repairVerify.hasMsePatch ? 'text-emerald-400 font-bold' : 'text-slate-500'}>
+                    {findingCaps.repairVerify.hasMsePatch ? '✓' : '○'}
+                  </span>
+                  <span>MSE Patch: {findingCaps.repairVerify.hasMsePatch ? 'Synthesized in RAM' : 'Manual Edit'}</span>
+                </div>
+                <div className="flex items-center space-x-1.5 text-slate-300">
+                  <span className="text-emerald-400 font-bold">✓</span>
+                  <span>In-Memory Source Editor</span>
+                </div>
+                <div className="flex items-center space-x-1.5 text-slate-300">
+                  <span className={gateDecision === 'VERIFIED' ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>
+                    {gateDecision === 'VERIFIED' ? '✓' : '○'}
+                  </span>
+                  <span>Verification: {gateDecision}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* TRUST & EXPLAINABILITY MATRIX */}
         <section className="bg-[#0d131f] border border-[#263147] rounded-lg p-5 space-y-3.5 shadow-sm">
           <div className="flex items-center justify-between">
@@ -344,26 +462,121 @@ export default function FindingDetailView({
           </section>
         )}
 
-        {/* NARRATIVE SECTION: PROPOSED CHANGE */}
-        {patch && (
+        {/* REQUIREMENT 5: IMMEDIATELY SHOW WHAT CHANGED (PATCH APPLIED) */}
+        {patch && isRepaired && (
+          <section className="bg-emerald-950/20 border border-emerald-500/40 rounded-lg p-5 space-y-4 shadow-md">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <h2 className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+                  PATCH APPLIED
+                </h2>
+              </div>
+              <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-bold ${
+                isWorkingRevisionVerified
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+              }`}>
+                {isWorkingRevisionVerified ? 'VERIFIED' : 'MODIFIED — NOT VERIFIED'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs bg-[#090d16]/70 p-3 rounded border border-[#1e293b]">
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">File:</span>
+                <span className="font-mono text-slate-200">{patch.targetFile}</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Source:</span>
+                <span className="text-emerald-400 font-semibold">MSE generated repair</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">State:</span>
+                <span className={`font-bold ${isWorkingRevisionVerified ? 'text-emerald-400' : 'text-amber-300'}`}>
+                  {isWorkingRevisionVerified ? 'VERIFIED' : 'MODIFIED — NOT VERIFIED'}
+                </span>
+              </div>
+            </div>
+
+            {/* Actions: [ View Source ] [ View Diff ] [ Test Changes ] [ Revert Patch ] */}
+            <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-[#1e293b]">
+              <button
+                onClick={() => onJumpToSource(patch.targetFile, finding.line, finding, 'view')}
+                className="px-3 py-1.5 rounded bg-[#162032] hover:bg-[#1e293b] border border-[#263147] text-slate-200 text-xs font-medium transition"
+              >
+                View Source
+              </button>
+              <button
+                onClick={() => onViewPatch(patch.targetFile)}
+                className="px-3 py-1.5 rounded bg-[#162032] hover:bg-[#1e293b] border border-[#263147] text-slate-200 text-xs font-medium transition"
+              >
+                View Diff
+              </button>
+              <button
+                onClick={onVerifyFix}
+                className="px-3 py-1.5 rounded bg-[#1e293b] hover:bg-[#334155] border border-[#38bdf8] text-[#38bdf8] text-xs font-bold transition flex items-center space-x-1"
+              >
+                <span>Test Changes</span>
+              </button>
+              {onRevertPatch && (
+                <button
+                  onClick={() => onRevertPatch(patch)}
+                  className="px-3 py-1.5 rounded bg-red-950/40 hover:bg-red-900/60 border border-red-500/40 text-red-300 text-xs font-bold transition"
+                >
+                  Revert Patch
+                </button>
+              )}
+            </div>
+
+            {/* Unified Diff Preview of Applied Patch */}
+            <div className="bg-[#060910] border border-[#1e293b] rounded font-mono text-xs overflow-x-auto max-h-64 mt-3">
+              <div className="p-2 border-b border-[#162032] text-slate-500 text-[11px] flex items-center justify-between">
+                <span>{patch.targetFile} (working snapshot)</span>
+                <span>Unified Diff</span>
+              </div>
+              <div className="p-3 space-y-0.5">
+                {diffChunks.map((chunk, cIdx) => (
+                  <div key={cIdx} className="space-y-0.5">
+                    <div className="text-slate-500 text-[11px] py-0.5 select-none">{chunk.header}</div>
+                    {chunk.lines.map((line, lIdx) => (
+                      <div
+                        key={lIdx}
+                        className={`px-1.5 py-0.2 rounded-sm ${
+                          line.type === 'add'
+                            ? 'bg-emerald-950/60 text-emerald-300'
+                            : line.type === 'del'
+                            ? 'bg-red-950/60 text-red-300'
+                            : 'text-slate-400'
+                        }`}
+                      >
+                        {line.raw}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* NARRATIVE SECTION: PROPOSED CHANGE (WHEN NOT APPLIED) */}
+        {patch && !isRepaired && (
           <section className="bg-[#0d131f] border border-[#263147] rounded-lg p-5 space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              <span>Proposed change</span>
+                <span>Proposed change</span>
               </h2>
               <div className="flex items-center space-x-2">
                 <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-mono">
                   {patch.strategy}
                 </span>
-                {!isRepaired && (
-                  <button
-                    onClick={() => onApplyPatch(patch)}
-                    className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition"
-                  >
-                    Apply Patch in RAM
-                  </button>
-                )}
+                <button
+                  onClick={() => onApplyPatch(patch)}
+                  className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition"
+                >
+                  Apply Patch in RAM
+                </button>
               </div>
             </div>
 

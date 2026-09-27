@@ -14,7 +14,6 @@ export default function VerificationView({
   const decisionStatus = decision?.status || verification?.status;
   const isVerified = decisionStatus === 'VERIFIED';
   const isRejected = decisionStatus === 'REJECTED' || decisionStatus === 'FAILED';
-  const isPending = !isVerified && !isRejected;
   const durationMs = verification?.durationMs ?? 0;
   const invariantList = invariants?.invariants || [];
   const totalDuration = pipelineResult?.totalDurationMs ?? 0;
@@ -35,7 +34,7 @@ export default function VerificationView({
               <span className={`text-xl font-bold uppercase tracking-wider ${
                 isVerified ? 'text-emerald-400' : isRejected ? 'text-red-400' : 'text-amber-400'
               }`}>
-                {isVerified ? 'VERIFIED' : isRejected ? 'REJECTED' : 'NEEDS REVIEW'}
+                {isVerified ? 'VERIFIED' : isRejected ? 'FAILED' : 'NEEDS REVIEW'}
               </span>
               <span className={`text-[10px] px-2 py-0.5 rounded font-bold font-mono border ${
                 isVerified
@@ -44,7 +43,7 @@ export default function VerificationView({
                   ? 'bg-red-500/20 text-red-400 border-red-500/30'
                   : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
               }`}>
-                {isVerified ? 'MSE VERIFICATION GATE PASSED' : isRejected ? 'MSE VERIFICATION GATE FAILED' : 'PENDING PATCH APPLICATION'}
+                {isVerified ? 'VERIFIED' : isRejected ? 'FAILED' : 'NEEDS REVIEW'}
               </span>
             </div>
             <p className="text-xs text-slate-400 max-w-2xl">
@@ -93,7 +92,7 @@ export default function VerificationView({
               return (
               <div
                 key={idx}
-                className={`flex items-center space-x-2 p-3 rounded bg-[#111724} border ${
+                className={`flex items-center space-x-2 p-3 rounded bg-[#111724] border ${
                   passed
                     ? 'border-emerald-500/30 bg-emerald-500/10'
                     : 'border-[#263147]'

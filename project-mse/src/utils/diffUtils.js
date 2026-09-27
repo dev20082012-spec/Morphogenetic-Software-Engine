@@ -64,3 +64,110 @@ export function parseUnifiedDiff(diffString) {
 
   return chunks;
 }
+
+/**
+ * Generates a unified diff string between original and modified text content.
+ *
+ * @param {string} filePath
+ * @param {string} original
+ * @param {string} modified
+ * @returns {string}
+ */
+export function generateUnifiedDiff(filePath, original, modified) {
+  if (original === modified) return '';
+
+  const origLines = (original ?? '').split('\n');
+  const modLines = (modified ?? '').split('\n');
+  const chunks = [];
+
+  let i = 0;
+  let j = 0;
+
+  while (i < origLines.length || j < modLines.length) {
+    if (i < origLines.length && j < modLines.length && origLines[i] === modLines[j]) {
+      i++;
+      j++;
+      continue;
+    }
+
+    const contextStart = Math.max(0, i - 3);
+    const chunkLines = [];
+
+    // Leading context
+    for (let c = contextStart; c < i; c++) {
+      chunkLines.push({ type: 'context', text: origLines[c], oldNum: c + 1, newNum: c + 1 + (j - i) });
+    }
+
+    const diffStartOld = i;
+    const diffStartNew = j;
+
+    let syncFound = false;
+    const removedLines = [];
+    const addedLines = [];
+
+    for (let lookAhead = 0; lookAhead < 30 && !syncFound; lookAhead++) {
+      if (j + lookAhead < modLines.length) {
+        const modLine = modLines[j + lookAhead];
+        const origIdx = origLines.indexOf(modLine, i);
+        if (origIdx >= i && origIdx < i + 30) {
+          for (let r = i; r < origIdx; r++) {
+            removedLines.push(origLines[r]);
+          }
+          for (let a = j; a < j + lookAhead; a++) {
+            addedLines.push(modLines[a]);
+          }
+          i = origIdx;
+          j = j + lookAhead;
+          syncFound = true;
+        }
+      }
+    }
+
+    if (!syncFound) {
+      if (i < origLines.length) {
+        removedLines.push(origLines[i]);
+        i++;
+      }
+      if (j < modLines.length) {
+        addedLines.push(modLines[j]);
+        j++;
+      }
+    }
+
+    for (const line of removedLines) {
+      chunkLines.push({ type: 'remove', text: line });
+    }
+    for (const line of addedLines) {
+      chunkLines.push({ type: 'add', text: line });
+    }
+
+    for (let c = 0; c < 3 && i + c < origLines.length && j + c < modLines.length; c++) {
+      if (origLines[i + c] === modLines[j + c]) {
+        chunkLines.push({ type: 'context', text: origLines[i + c] });
+      }
+    }
+
+    if (chunkLines.length > 0) {
+      const removeCount = removedLines.length;
+      const addCount = addedLines.length;
+      chunks.push({
+        header: `@@ -${diffStartOld + 1},${removeCount + 6} +${diffStartNew + 1},${addCount + 6} @@`,
+        lines: chunkLines,
+      });
+    }
+  }
+
+  if (chunks.length === 0) return '';
+
+  let diff = `--- a/${filePath}\n+++ b/${filePath}\n`;
+  for (const chunk of chunks) {
+    diff += chunk.header + '\n';
+    for (const line of chunk.lines) {
+      if (line.type === 'remove') diff += `- ${line.text}\n`;
+      else if (line.type === 'add') diff += `+ ${line.text}\n`;
+      else diff += `  ${line.text}\n`;
+    }
+  }
+
+  return diff;
+}

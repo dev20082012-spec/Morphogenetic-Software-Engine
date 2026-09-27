@@ -73,8 +73,9 @@ export function saveAnalysisRun(run) {
     counterexamplesCount: run.counterexamplesCount || 0,
     patchesCount: run.patchesCount || 0,
     candidateRepairs: run.candidateRepairs || run.patchesCount || 0,
-    verificationOutcome: run.verificationOutcome || 'VERIFIED',
+    verificationOutcome: run.verificationOutcome || 'NEEDS_REVIEW',
     decision: run.decision || null,
+    verificationResult: run.verificationResult || null,
     snapshot: run.snapshot,
     pipelineResult: run.pipelineResult
   };

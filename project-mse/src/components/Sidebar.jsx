@@ -9,7 +9,8 @@ export default function Sidebar({
   patchesCount = 0,
   onChangeRepository,
   onToggleTechnical,
-  isTechnicalOpen = false
+  isTechnicalOpen = false,
+  isRunning = false
 }) {
   const navItems = [
     {
@@ -24,7 +25,7 @@ export default function Sidebar({
     {
       id: 'findings',
       label: 'Findings',
-      badge: findingsCount > 0 ? findingsCount : null,
+      badge: !isRunning && findingsCount > 0 ? findingsCount : null,
       badgeColor: criticalCount > 0 ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30',
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -35,7 +36,7 @@ export default function Sidebar({
     {
       id: 'changes',
       label: 'Changes',
-      badge: patchesCount > 0 ? patchesCount : null,
+      badge: !isRunning && patchesCount > 0 ? patchesCount : null,
       badgeColor: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
       icon: (
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -73,14 +74,16 @@ export default function Sidebar({
         <div className="bg-[#111724] border border-[#263147] rounded-md p-2.5 space-y-1.5">
           <div className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider flex items-center justify-between">
             <span>Target Repo</span>
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            <span className={`h-1.5 w-1.5 rounded-full ${isRunning ? 'bg-[#38bdf8] animate-pulse' : 'bg-emerald-400'}`} />
           </div>
           <div className="text-xs font-bold text-slate-200 truncate font-mono" title={repositoryName}>
             {repositoryName || 'repository'}
           </div>
           <button
-            onClick={onChangeRepository}
-            className="w-full text-left text-[11px] text-[#38bdf8] hover:text-white transition flex items-center justify-between pt-1 border-t border-[#1e293b]"
+            onClick={isRunning ? undefined : onChangeRepository}
+            disabled={isRunning}
+            className="w-full text-left text-[11px] text-[#38bdf8] hover:text-white transition flex items-center justify-between pt-1 border-t border-[#1e293b] disabled:opacity-40 disabled:cursor-not-allowed"
+            title={isRunning ? "Disabled while analysis is running" : "Change repository"}
           >
             <span>Change Repository</span>
             <span>&rarr;</span>
@@ -94,12 +97,18 @@ export default function Sidebar({
             return (
               <button
                 key={item.id}
-                onClick={() => onNavigate(item.id)}
+                onClick={isRunning ? undefined : () => onNavigate(item.id)}
+                disabled={isRunning}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-xs font-medium transition ${
+                  isRunning ? 'opacity-40 cursor-not-allowed' : ''
+                } ${
                   isActive
                     ? 'bg-[#1e293b] text-white shadow-sm border border-[#334155]'
+                    : isRunning
+                    ? 'text-slate-500'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-[#111724]'
                 }`}
+                title={isRunning ? "Navigation disabled during analysis" : item.label}
               >
                 <div className="flex items-center space-x-2.5">
                   <span className={isActive ? 'text-[#38bdf8]' : 'text-slate-500'}>

@@ -21,5 +21,14 @@ export { generateReport } from './report/index.js';
 // Pipeline orchestrator
 export { runPipeline, runPipelineAsync } from './pipeline.js';
 
+// Patch lifecycle & stateful repository transformation
+export {
+  computeRevisionId,
+  applyPatchAtomically,
+  revertPatchAtomically,
+  detectPatchCollision,
+  getFileModificationState
+} from './patchLifecycle.js';
+
 // Utilities
 export * from './pathUtils.js';

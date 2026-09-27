@@ -7,6 +7,7 @@
 export { loadDemoRepository } from './demoRepository.js';
 export { loadEnterpriseFixture } from './enterpriseRepository.js';
 export { loadZipRepository } from './zipLoader.js';
+export { loadGitHubRepository, parseGitHubUrl } from './githubLoader.js';
 
 /**
  * Validate a RepositorySnapshot for basic integrity.

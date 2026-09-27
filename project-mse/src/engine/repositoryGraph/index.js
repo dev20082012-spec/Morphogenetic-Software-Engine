@@ -231,8 +231,6 @@ function extractImports(content, filePath) {
       let resolved = specifier;
       if (specifier.startsWith('.')) {
         resolved = resolveRelative(filePath, specifier);
-        // Try adding .js if no extension
-        if (!extname(resolved)) resolved += '.js';
       }
 
       imports.push({
@@ -431,6 +429,27 @@ function collectEnvVars(fileAnalyses) {
   return [...byName.values()];
 }
 
+function resolveKnownModule(resolved, knownPaths) {
+  if (!resolved || resolved === '__proto__' || resolved === 'constructor') return null;
+  if (knownPaths.has(resolved)) return resolved;
+
+  const exts = ['.ts', '.js', '.tsx', '.jsx', '.mjs', '.cjs'];
+  for (const ext of exts) {
+    if (knownPaths.has(resolved + ext)) return resolved + ext;
+  }
+
+  const base = resolved.replace(/\.[a-z0-9]+$/i, '');
+  for (const ext of exts) {
+    if (knownPaths.has(base + ext)) return base + ext;
+  }
+
+  for (const ext of exts) {
+    if (knownPaths.has(resolved + '/index' + ext)) return resolved + '/index' + ext;
+  }
+
+  return null;
+}
+
 function buildDependencyGraph(fileAnalyses, snapshot) {
   const knownPaths = new Set(snapshot.files.map(f => f.path));
   const graph = Object.create(null);
@@ -439,13 +458,8 @@ function buildDependencyGraph(fileAnalyses, snapshot) {
     if (!fa || !fa.path || fa.path === '__proto__' || fa.path === 'constructor' || fa.path === 'prototype') continue;
     const deps = fa.imports
       .filter(imp => imp && imp.isRelative)
-      .map(imp => imp.resolved)
-      .filter(resolved => {
-        if (!resolved || resolved === '__proto__' || resolved === 'constructor') return false;
-        return knownPaths.has(resolved) ||
-               knownPaths.has(resolved.replace(/\.js$/, '')) ||
-               knownPaths.has(resolved + '/index.js');
-      });
+      .map(imp => resolveKnownModule(imp.resolved, knownPaths))
+      .filter(Boolean);
 
     graph[fa.path] = [...new Set(deps)];
   }
@@ -466,10 +480,11 @@ function buildGraphEdges(fileAnalyses, dependencies) {
   // Route registration edges (entry point → route file)
   for (const fa of fileAnalyses) {
     if (fa.isEntryPoint) {
-      for (const imp of fa.imports) {
-        const targetAnalysis = fileAnalyses.find(f => f.path === imp.resolved);
+      const deps = dependencies[fa.path] || [];
+      for (const targetPath of deps) {
+        const targetAnalysis = fileAnalyses.find(f => f.path === targetPath);
         if (targetAnalysis && targetAnalysis.routes.length > 0) {
-          edges.push({ from: fa.path, to: imp.resolved, type: 'mounts-routes' });
+          edges.push({ from: fa.path, to: targetPath, type: 'mounts-routes' });
         }
       }
     }

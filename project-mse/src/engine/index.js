@@ -5,10 +5,11 @@
  */
 
 // Ingestion
-export { loadDemoRepository, loadEnterpriseFixture, loadZipRepository, validateSnapshot } from './ingest/index.js';
+export { loadDemoRepository, loadEnterpriseFixture, loadZipRepository, loadGitHubRepository, parseGitHubUrl, validateSnapshot } from './ingest/index.js';
 
 // Analysis pipeline
 export { analyzeRepository } from './repositoryGraph/index.js';
+export { calculateBlastRadius } from './repositoryGraph/blastRadius.js';
 export { analyzeDrift } from './drift/index.js';
 export { evaluateInvariants } from './invariants/index.js';
 export { generateCounterexamples } from './counterexample/index.js';

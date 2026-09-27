@@ -1,71 +1,84 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import HeaderBar from './components/HeaderBar';
-import FileTree from './components/FileTree';
+import Sidebar from './components/Sidebar';
 import CenterWorkspace from './components/CenterWorkspace';
-import InvariantInspector from './components/InvariantInspector';
+import LandingPage from './components/LandingPage';
+import TechnicalDrawer from './components/workspace/TechnicalDrawer';
 import VerificationConsole from './components/VerificationConsole';
 
 import { 
   loadDemoRepository, 
   loadEnterpriseFixture,
   loadZipRepository, 
+  loadGitHubRepository,
+  parseGitHubUrl,
   runPipeline,
   runPipelineAsync,
   applyPatches,
   applySinglePatch
 } from './engine/index.js';
+import { getUnifiedFindings } from './utils/findingsAdapter.js';
+import { saveAnalysisRun } from './utils/sessionManager.js';
 
 export default function App() {
+  // Screen / Flow state: Landing vs Workspace
+  const [isLanding, setIsLanding] = useState(true);
+
   // Repository state
   const [repositorySource, setRepositorySource] = useState('demo');
-  const [snapshot, setSnapshot] = useState(() => loadDemoRepository());
-  const [pipelineResult, setPipelineResult] = useState(() => runPipeline(loadDemoRepository()));
+  const [snapshot, setSnapshot] = useState(null);
+  const [pipelineResult, setPipelineResult] = useState(null);
+  const [currentRunId, setCurrentRunId] = useState('RUN #001');
 
   // Active navigation & view state
-  const [workspaceMode, setWorkspaceMode] = useState('overview');
-  const [activeFilePath, setActiveFilePath] = useState('server.js');
-  const [openTabs, setOpenTabs] = useState(['server.js', 'src/routes/webhook.js', 'specs/README.md']);
+  const [activeNav, setActiveNav] = useState('overview'); // 'overview' | 'findings' | 'changes' | 'runs' | 'verification' | 'report' | 'source'
+  const [selectedFinding, setSelectedFinding] = useState(null);
+  const [isTechnicalOpen, setIsTechnicalOpen] = useState(false);
+  const [errorBanner, setErrorBanner] = useState(null);
+
+  // Code inspection & file state
+  const [activeFilePath, setActiveFilePath] = useState('src/api/webhooks.ts');
+  const [openTabs, setOpenTabs] = useState(['src/server.ts', 'src/api/webhooks.ts', 'README.md']);
   const [highlightLine, setHighlightLine] = useState(null);
   const [selectedEvidence, setSelectedEvidence] = useState(null);
-  const [selectedInvariant, setSelectedInvariant] = useState(null);
   const [targetDiffFile, setTargetDiffFile] = useState(null);
 
   // Patch application tracking
   const [appliedPatchIds, setAppliedPatchIds] = useState([]);
 
   // Telemetry & execution state
-  const [status, setStatus] = useState('idle');
+  const [status, setStatus] = useState('converged');
   const [currentStage, setCurrentStage] = useState('COMPLETE');
   const [durationMs, setDurationMs] = useState(18);
-  const [consoleExpanded, setConsoleExpanded] = useState(true);
+  const [consoleExpanded, setConsoleExpanded] = useState(false);
   const [logs, setLogs] = useState([
     '[00:00.00] [ORCHESTRATOR] Initialized Project MSE Developer Studio.',
-    '[00:00.05] [INGESTING] Ingested 12 files from demo repository into ephemeral RAM.',
-    '[00:00.12] [ANALYZING] Alpha AST Call-Graph analysis complete: 4 routes indexed.',
-    '[00:00.18] [RECONCILING] Beta Spec Drift reconciliation complete: 3 discrepancies found.',
-    '[00:00.22] [SEARCHING] Formal invariant evaluation: 4 violated, 2 satisfied.',
+    '[00:00.05] [INGESTING] Ingested canonical enterprise fixture into ephemeral RAM.',
+    '[00:00.12] [ANALYZING] Alpha AST Call-Graph analysis complete: endpoints indexed.',
+    '[00:00.18] [RECONCILING] Beta Spec Drift reconciliation complete: port & auth mismatches detected.',
+    '[00:00.22] [SEARCHING] Formal invariant evaluation: security invariants bound.',
     '[00:00.28] [SYNTHESIZING] CEGIS Counterexamples & atomic repair patches synthesized.',
-    '[00:00.35] [COMPLETE] Initial baseline loaded. Click "RUN MSE AUDIT" to re-verify.'
+    '[00:00.35] [COMPLETE] Baseline analysis ready. Review findings to inspect risks.'
   ]);
 
   const isRunningRef = useRef(false);
   const runIdRef = useRef(0);
 
   // Core Audit Runner using real async pipeline
-  const executeAudit = useCallback(async (targetSnapshot, customDelay = 70) => {
-    const currentRunId = ++runIdRef.current;
+  const executeAudit = useCallback(async (targetSnapshot, customDelay = 40) => {
+    const currentRunIdNum = ++runIdRef.current;
     isRunningRef.current = true;
 
     setStatus('running');
     setCurrentStage('INGESTING');
-    setLogs([`[00:00.00] [ORCHESTRATOR] Initiating MSE Homeostasis Prover on "${targetSnapshot.metadata?.name || 'repository'}"...`]);
+    setLogs([`[00:00.00] [ORCHESTRATOR] Initiating MSE analysis on "${targetSnapshot.metadata?.name || 'repository'}"...`]);
 
     try {
       const result = await runPipelineAsync(targetSnapshot, {
         stageDelayMs: customDelay,
+        runId: currentRunId,
         onEvent: (event) => {
-          if (runIdRef.current !== currentRunId) return; // Discard stale telemetry events
-          // Map phase to UI stage
+          if (runIdRef.current !== currentRunIdNum) return;
           if (['INGESTING', 'ANALYZING', 'RECONCILING', 'SEARCHING', 'SYNTHESIZING', 'VERIFYING', 'COMPLETE'].includes(event.phase)) {
             setCurrentStage(event.phase);
           }
@@ -75,27 +88,71 @@ export default function App() {
         },
       });
 
-      if (runIdRef.current !== currentRunId) return; // Stale execution discarded, preventing race conditions
+      if (runIdRef.current !== currentRunIdNum) return;
 
       setPipelineResult(result);
       setDurationMs(result.totalDurationMs);
       setCurrentStage('COMPLETE');
       setStatus(result.verification?.status === 'VERIFIED' ? 'converged' : 'verified');
-      if (result.invariants?.invariants?.length > 0) {
-        setSelectedInvariant(result.invariants.invariants[0]);
+
+      // Record analysis session in product memory
+      const savedRun = saveAnalysisRun({
+        id: currentRunId,
+        repositoryName: targetSnapshot.metadata?.name || 'repository',
+        repositorySource: targetSnapshot.metadata?.source || repositorySource,
+        durationMs: result.totalDurationMs,
+        filesCount: targetSnapshot.files?.length || 0,
+        findingsCount: (result.analysis?.findings?.length || 0) + (result.drift?.findings?.length || 0),
+        counterexamplesCount: result.counterexamples?.summary?.generated || 0,
+        patchesCount: result.patches?.summary?.generated || 0,
+        verificationOutcome: result.verification?.status === 'VERIFIED' ? 'VERIFIED' : 'NEEDS REVIEW',
+        snapshot: targetSnapshot,
+        pipelineResult: result
+      });
+      if (savedRun?.id) {
+        setCurrentRunId(savedRun.id);
       }
     } catch (err) {
-      if (runIdRef.current !== currentRunId) return;
+      if (runIdRef.current !== currentRunIdNum) return;
       setLogs(prev => [...prev, `[ERROR] Pipeline failure: ${err.message}`]);
       setStatus('error');
+      setErrorBanner({
+        title: 'Analysis Error',
+        message: `Analysis could not complete: ${err.message}. Please try a different repository or use the built-in demo.`
+      });
     } finally {
-      if (runIdRef.current === currentRunId) {
+      if (runIdRef.current === currentRunIdNum) {
         isRunningRef.current = false;
       }
     }
-  }, []);
+  }, [currentRunId, repositorySource]);
 
-  // Handler: Select Bundled Demo Repository 1 (payment-gateway)
+  // Compute unified findings across Alpha, Beta, and Invariants with Evidence Chain & Blast Radius
+  const unifiedFindings = useMemo(() => {
+    return getUnifiedFindings(pipelineResult, appliedPatchIds, snapshot);
+  }, [pipelineResult, appliedPatchIds, snapshot]);
+
+  const patches = pipelineResult?.patches?.patches || [];
+  const criticalCount = unifiedFindings.filter(f => f.severity === 'CRITICAL' && !f.isRepaired).length;
+
+  // Handler: Select Enterprise Demo Repository
+  const handleSelectEnterpriseDemo = () => {
+    const enterpriseSnapshot = loadEnterpriseFixture();
+    setRepositorySource('demo');
+    setSnapshot(enterpriseSnapshot);
+    setAppliedPatchIds([]);
+    setActiveFilePath('src/api/webhooks.ts');
+    setOpenTabs(['src/server.ts', 'src/api/webhooks.ts', 'README.md']);
+    setHighlightLine(null);
+    setSelectedEvidence(null);
+    setSelectedFinding(null);
+    setTargetDiffFile(null);
+    setIsLanding(false);
+    setActiveNav('overview');
+    executeAudit(enterpriseSnapshot);
+  };
+
+  // Handler: Select Lightweight Demo Repository
   const handleSelectDemo = () => {
     const demoSnapshot = loadDemoRepository();
     setRepositorySource('demo');
@@ -105,22 +162,11 @@ export default function App() {
     setOpenTabs(['server.js', 'src/routes/webhook.js', 'specs/README.md']);
     setHighlightLine(null);
     setSelectedEvidence(null);
+    setSelectedFinding(null);
     setTargetDiffFile(null);
+    setIsLanding(false);
+    setActiveNav('overview');
     executeAudit(demoSnapshot);
-  };
-
-  // Handler: Select Canonical Enterprise Fixture (enterprise-payment-core)
-  const handleSelectEnterpriseDemo = () => {
-    const enterpriseSnapshot = loadEnterpriseFixture();
-    setRepositorySource('demo');
-    setSnapshot(enterpriseSnapshot);
-    setAppliedPatchIds([]);
-    setActiveFilePath('src/server.ts');
-    setOpenTabs(['src/server.ts', 'src/api/webhooks.ts', 'src/security/auth.ts', 'README.md']);
-    setHighlightLine(null);
-    setSelectedEvidence(null);
-    setTargetDiffFile(null);
-    executeAudit(enterpriseSnapshot);
   };
 
   // Handler: Upload ZIP Repository
@@ -137,19 +183,60 @@ export default function App() {
       setSnapshot(zipSnapshot);
       setAppliedPatchIds([]);
 
-      // Set initial active file to first available file or README
       const firstFile = zipSnapshot.files.find(f => f.path.toLowerCase().includes('readme')) || zipSnapshot.files[0];
       const initialPath = firstFile?.path || 'index.js';
       setActiveFilePath(initialPath);
       setOpenTabs([initialPath]);
       setHighlightLine(null);
       setSelectedEvidence(null);
+      setSelectedFinding(null);
       setTargetDiffFile(null);
+      setIsLanding(false);
+      setActiveNav('overview');
 
       executeAudit(zipSnapshot);
     } catch (err) {
       setLogs(prev => [...prev, `[ZIP ERROR] Failed to load ZIP: ${err.message}`]);
       setStatus('error');
+      setErrorBanner({
+        title: 'ZIP Ingestion Error',
+        message: `${err.message}. Please ensure the archive is a valid JavaScript or TypeScript project ZIP archive.`
+      });
+    }
+  };
+
+  // Handler: Ingest and Analyze Public GitHub Repository
+  const handleAnalyzeGithub = async (url) => {
+    try {
+      setStatus('running');
+      setCurrentStage('INGESTING');
+      const { owner, repo } = parseGitHubUrl(url);
+      setLogs(prev => [...prev, `[GITHUB] Connecting to GitHub REST API for "${owner}/${repo}"...`]);
+
+      const githubSnapshot = await loadGitHubRepository(url);
+      setRepositorySource('github');
+      setSnapshot(githubSnapshot);
+      setAppliedPatchIds([]);
+
+      const firstFile = githubSnapshot.files.find(f => f.path.toLowerCase().includes('readme')) || githubSnapshot.files[0];
+      const initialPath = firstFile?.path || 'index.js';
+      setActiveFilePath(initialPath);
+      setOpenTabs([initialPath]);
+      setHighlightLine(null);
+      setSelectedEvidence(null);
+      setSelectedFinding(null);
+      setTargetDiffFile(null);
+      setIsLanding(false);
+      setActiveNav('overview');
+
+      executeAudit(githubSnapshot);
+    } catch (err) {
+      setLogs(prev => [...prev, `[GITHUB NOTICE] ${err.message}`]);
+      setErrorBanner({
+        title: 'GitHub Ingestion Notice',
+        message: `${err.message}. Switched to Canonical Enterprise Demo so you can continue testing without interruption.`
+      });
+      handleSelectEnterpriseDemo();
     }
   };
 
@@ -160,7 +247,7 @@ export default function App() {
 
   // Handler: Re-run Verification on current snapshot
   const handleReRunVerification = () => {
-    executeAudit(snapshot, 40);
+    executeAudit(snapshot, 30);
   };
 
   // Handler: Apply Single Patch to in-memory Snapshot
@@ -177,13 +264,35 @@ export default function App() {
       `[RAM PATCH] Applied ${patch.id} (${patch.strategy}) to in-memory file "${patch.targetFile}". Zero-retention RAM state updated.`
     ]);
 
-    // Automatically re-run audit on updated in-memory snapshot to show invariant restoration
-    executeAudit(newSnapshot, 40);
+    executeAudit(newSnapshot, 30);
+  };
+
+  // Handler: Reject / Revert Patch
+  const handleRejectPatch = (patch) => {
+    if (!patch) return;
+    const updatedApplied = appliedPatchIds.filter(id => id !== patch.id);
+    setAppliedPatchIds(updatedApplied);
+
+    setLogs(prev => [
+      ...prev,
+      `[RAM REVERT] Reverted patch ${patch.id} from in-memory file "${patch.targetFile}". Re-verifying baseline...`
+    ]);
+
+    // Reconstruct snapshot from baseline plus remaining applied patches
+    const baseline = repositorySource === 'enterprise' || repositorySource === 'demo'
+      ? loadEnterpriseFixture()
+      : snapshot;
+    const remainingPatches = patches.filter(p => updatedApplied.includes(p.id));
+    const revertedSnapshot = remainingPatches.length > 0
+      ? applyPatches(baseline, remainingPatches)
+      : baseline;
+
+    setSnapshot(revertedSnapshot);
+    executeAudit(revertedSnapshot, 30);
   };
 
   // Handler: Apply All Patches
   const handleApplyAllPatches = () => {
-    const patches = pipelineResult?.patches?.patches || [];
     if (patches.length === 0) return;
 
     const newSnapshot = applyPatches(snapshot, patches);
@@ -195,16 +304,27 @@ export default function App() {
       `[RAM PATCH] Applied all ${patches.length} synthesized atomic patches in RAM. Re-verifying repository invariants...`
     ]);
 
-    executeAudit(newSnapshot, 40);
+    executeAudit(newSnapshot, 30);
   };
 
-  // Handler: Select File from Explorer or Tab
+  // Handler: Restore Historical Analysis Run
+  const handleSelectRun = (run) => {
+    if (!run) return;
+    if (run.snapshot) setSnapshot(run.snapshot);
+    if (run.pipelineResult) setPipelineResult(run.pipelineResult);
+    if (run.repositorySource) setRepositorySource(run.repositorySource);
+    if (run.id) setCurrentRunId(run.id);
+    setSelectedFinding(null);
+    setActiveNav('overview');
+  };
+
+  // Handler: Select File from Tab or Explorer
   const handleSelectFile = (filePath) => {
     setActiveFilePath(filePath);
     if (!openTabs.includes(filePath)) {
       setOpenTabs(prev => [...prev, filePath]);
     }
-    setWorkspaceMode('source');
+    setActiveNav('source');
     setHighlightLine(null);
     setSelectedEvidence(null);
   };
@@ -212,7 +332,7 @@ export default function App() {
   // Handler: Select Tab
   const handleSelectTab = (tabPath) => {
     setActiveFilePath(tabPath);
-    setWorkspaceMode('source');
+    setActiveNav('source');
   };
 
   // Handler: Close Tab
@@ -224,24 +344,13 @@ export default function App() {
     }
   };
 
-  // Handler: Jump to File & Line (from Drift or Invariant)
+  // Handler: Jump to File & Line (from Finding)
   const handleJumpToFile = (filePath, line, evidence) => {
     if (!filePath) return;
     handleSelectFile(filePath);
     setHighlightLine(line || null);
     setSelectedEvidence(evidence || null);
-    setWorkspaceMode('source');
-  };
-
-  // Handler: Jump to Invariant
-  const handleJumpToInvariant = (invariant, evidence) => {
-    setSelectedInvariant(invariant);
-    const targetFile = evidence?.file || invariant.evidence?.[0]?.file || activeFilePath;
-    const targetLine = evidence?.line || invariant.evidence?.[0]?.line || null;
-    handleJumpToFile(targetFile, targetLine, {
-      ...evidence,
-      title: `${invariant.id}: ${invariant.name}`,
-    });
+    setActiveNav('source');
   };
 
   // Handler: Open Diff Mode for target file
@@ -249,12 +358,7 @@ export default function App() {
     if (filePath) {
       setTargetDiffFile(filePath);
     }
-    setWorkspaceMode('diff');
-  };
-
-  // Reset Workbench to initial demo state
-  const handleReset = () => {
-    handleSelectDemo();
+    setActiveNav('changes');
   };
 
   // Active file object
@@ -262,100 +366,127 @@ export default function App() {
     || snapshot?.files?.[0] 
     || null;
 
-  // Check if current file has an associated patch
-  const hasPatchForCurrentFile = Boolean(
-    pipelineResult?.patches?.patches?.some(p => p.targetFile === activeFilePath)
-  );
-
-  const findings = [
-    ...(pipelineResult?.analysis?.findings || []),
-    ...(pipelineResult?.drift?.findings || [])
-  ];
-
-  const patches = pipelineResult?.patches?.patches || [];
-
   return (
     <div className="h-screen max-h-screen w-screen bg-[#090d16] text-slate-100 flex flex-col font-sans overflow-hidden">
-      {/* Top Header Bar */}
-      <HeaderBar
-        repositorySource={repositorySource}
-        repositoryName={snapshot?.metadata?.name}
-        onSelectDemo={handleSelectDemo}
-        onSelectEnterpriseDemo={handleSelectEnterpriseDemo}
-        onUploadZip={handleUploadZip}
-        status={status}
-        onRunAudit={handleRunAudit}
-        durationMs={durationMs}
-        findingsCount={findings.length}
-        hasPatches={patches.length > 0}
-        allPatchesApplied={patches.length > 0 && patches.every(p => appliedPatchIds.includes(p.id))}
-        onApplyAllPatches={handleApplyAllPatches}
-      />
+      {/* Human-Readable Error & Notification Banner */}
+      {errorBanner && (
+        <div className="bg-amber-500/10 border-b border-amber-500/30 px-4 py-2 flex items-center justify-between text-xs text-amber-300 shrink-0 z-50">
+          <div className="flex items-center space-x-2">
+            <span className="font-bold">[{errorBanner.title || 'Notice'}]</span>
+            <span>{errorBanner.message}</span>
+          </div>
+          <button
+            onClick={() => setErrorBanner(null)}
+            className="text-amber-400 hover:text-white font-bold ml-4 text-xs transition"
+          >
+            Dismiss ✕
+          </button>
+        </div>
+      )}
 
-      {/* Main Workbench Body: Explorer (Left) | Center Workspace (Center) | Invariants Rail (Right) */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Pane: Repository Explorer */}
-        <FileTree
-          files={snapshot?.files || []}
-          activeFile={activeFilePath}
-          onSelectFile={handleSelectFile}
-          patches={patches}
-          findings={findings}
-          onSelectDiff={handleOpenDiff}
-          activeDiffFile={targetDiffFile}
+      {/* LANDING / ENTRY STATE */}
+      {isLanding ? (
+        <LandingPage
+          onSelectEnterpriseDemo={handleSelectEnterpriseDemo}
+          onSelectDemo={handleSelectDemo}
+          onUploadZip={handleUploadZip}
+          onAnalyzeGithub={handleAnalyzeGithub}
+          isLoading={status === 'running'}
+          statusMessage={logs[logs.length - 1]}
         />
+      ) : (
+        /* WORKSPACE SHELL */
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Top Header Bar */}
+          <HeaderBar
+            repositoryName={snapshot?.metadata?.name}
+            repositorySource={repositorySource}
+            status={status}
+            onRunAudit={handleRunAudit}
+            durationMs={durationMs}
+            findingsCount={unifiedFindings.length}
+            hasPatches={patches.length > 0}
+            allPatchesApplied={patches.length > 0 && patches.every(p => appliedPatchIds.includes(p.id))}
+            onApplyAllPatches={handleApplyAllPatches}
+            onChangeRepository={() => setIsLanding(true)}
+            onToggleTechnical={() => setIsTechnicalOpen(!isTechnicalOpen)}
+            isTechnicalOpen={isTechnicalOpen}
+          />
 
-        {/* Center Pane: Developer Workspace with 7 Modes */}
-        <CenterWorkspace
-          mode={workspaceMode}
-          onModeChange={setWorkspaceMode}
-          file={currentFile}
-          highlightLine={highlightLine}
-          selectedEvidence={selectedEvidence}
-          openTabs={openTabs}
-          onSelectTab={handleSelectTab}
-          onCloseTab={handleCloseTab}
-          hasPatch={hasPatchForCurrentFile}
-          onOpenDiff={handleOpenDiff}
-          pipelineResult={pipelineResult}
-          snapshot={snapshot}
-          status={status}
-          onRunAudit={handleRunAudit}
-          appliedPatchIds={appliedPatchIds}
-          onApplyPatch={handleApplyPatch}
-          onApplyAllPatches={handleApplyAllPatches}
-          onReRunVerification={handleReRunVerification}
-          onJumpToFile={handleJumpToFile}
-          targetDiffFile={targetDiffFile}
-        />
+          {/* Workbench Body: Clean Left Sidebar + Center Workspace */}
+          <div className="flex-1 flex overflow-hidden">
+            {/* Primary Left Navigation */}
+            <Sidebar
+              activeNav={activeNav}
+              onNavigate={(nav) => {
+                setActiveNav(nav);
+                if (nav === 'findings') {
+                  setSelectedFinding(null); // Show list when clicking nav
+                }
+              }}
+              repositoryName={snapshot?.metadata?.name}
+              findingsCount={unifiedFindings.length}
+              criticalCount={criticalCount}
+              patchesCount={patches.length}
+              verificationStatus={pipelineResult?.verification?.status}
+              onChangeRepository={() => setIsLanding(true)}
+              onToggleTechnical={() => setIsTechnicalOpen(!isTechnicalOpen)}
+              isTechnicalOpen={isTechnicalOpen}
+            />
 
-        {/* Right Pane: System Invariants & Risk Assessment Rail */}
-        <InvariantInspector
-          invariants={pipelineResult?.invariants?.invariants || []}
-          selectedInvariant={selectedInvariant}
-          onJumpToInvariant={handleJumpToInvariant}
-          onOpenDiff={handleOpenDiff}
-          onOpenCounterexample={() => setWorkspaceMode('counterexample')}
-          patches={patches}
-          findings={findings}
-          reportJson={pipelineResult?.report?.json}
-          repoName={snapshot?.metadata?.name || 'repository'}
-        />
-      </div>
+            {/* Center Content Workspace */}
+            <CenterWorkspace
+              mode={activeNav}
+              onModeChange={setActiveNav}
+              selectedFinding={selectedFinding}
+              onSelectFinding={setSelectedFinding}
+              findings={unifiedFindings}
+              file={currentFile}
+              highlightLine={highlightLine}
+              selectedEvidence={selectedEvidence}
+              openTabs={openTabs}
+              onSelectTab={handleSelectTab}
+              onCloseTab={handleCloseTab}
+              pipelineResult={pipelineResult}
+              snapshot={snapshot}
+              status={status}
+              onRunAudit={handleRunAudit}
+              appliedPatchIds={appliedPatchIds}
+              onApplyPatch={handleApplyPatch}
+              onApplyAllPatches={handleApplyAllPatches}
+              onRejectPatch={handleRejectPatch}
+              onReRunVerification={handleReRunVerification}
+              onJumpToFile={handleJumpToFile}
+              targetDiffFile={targetDiffFile}
+              onOpenDiff={handleOpenDiff}
+              onSelectRun={handleSelectRun}
+              currentRunId={currentRunId}
+            />
+          </div>
 
-      {/* Bottom Pane: Verification & Telemetry Console Drawer */}
-      <VerificationConsole
-        status={status}
-        currentStage={currentStage}
-        logs={logs}
-        onRunAudit={handleRunAudit}
-        onReRunVerification={handleReRunVerification}
-        onReset={handleReset}
-        isExpanded={consoleExpanded}
-        onToggleExpand={() => setConsoleExpanded(!consoleExpanded)}
-        durationMs={durationMs}
-        filesCount={snapshot?.files?.length || 0}
-      />
+          {/* Progressive Disclosure: Technical Drawer */}
+          <TechnicalDrawer
+            isOpen={isTechnicalOpen}
+            onClose={() => setIsTechnicalOpen(false)}
+            pipelineResult={pipelineResult}
+            logs={logs}
+          />
+
+          {/* Bottom Telemetry & Console (Collapsible) */}
+          <VerificationConsole
+            status={status}
+            currentStage={currentStage}
+            logs={logs}
+            onRunAudit={handleRunAudit}
+            onReRunVerification={handleReRunVerification}
+            onReset={handleSelectEnterpriseDemo}
+            isExpanded={consoleExpanded}
+            onToggleExpand={() => setConsoleExpanded(!consoleExpanded)}
+            durationMs={durationMs}
+            filesCount={snapshot?.files?.length || 0}
+          />
+        </div>
+      )}
     </div>
   );
 }

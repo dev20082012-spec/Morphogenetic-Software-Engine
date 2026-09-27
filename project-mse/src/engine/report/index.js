@@ -2,8 +2,11 @@
  * Report Generator
  *
  * Generates structured JSON and human-readable Markdown reports
- * from the full pipeline results.
+ * from the full pipeline results, including Run ID, evidence chains,
+ * blast radius impact paths, and verification gate decisions.
  */
+
+import { calculateBlastRadius } from '../repositoryGraph/blastRadius.js';
 
 /**
  * Generate complete MSE report.
@@ -17,6 +20,7 @@
  * @param {import('../patch/index.js').PatchSynthesisResult} params.patches
  * @param {import('../verify/index.js').VerificationResult} params.verification
  * @param {number} params.totalDurationMs
+ * @param {string} [params.runId]
  * @returns {ReportResult}
  */
 export function generateReport({
@@ -28,12 +32,25 @@ export function generateReport({
   patches,
   verification,
   totalDurationMs,
+  runId = 'RUN #001'
 }) {
   const allFindings = [...analysis.findings, ...drift.findings];
   const criticalFindings = allFindings.filter(f => f.severity === 'CRITICAL');
 
+  // Compute blast radius for all findings
+  const findingsWithImpact = allFindings.map(f => {
+    const primaryFile = f.sourceEvidence?.[0]?.file || f.documentationEvidence?.[0]?.file || '';
+    const blastRadius = calculateBlastRadius(primaryFile, analysis, snapshot);
+    return {
+      ...f,
+      blastRadius
+    };
+  });
+
   const summary = {
+    runId,
     repositoryName: snapshot.metadata.name,
+    repositorySource: snapshot.metadata.source || 'demo',
     analyzedAt: new Date().toISOString(),
     filesAnalyzed: analysis.repositoryStats.totalFiles,
     sourceFilesAnalyzed: analysis.repositoryStats.sourceFiles,
@@ -53,13 +70,14 @@ export function generateReport({
     counterexamplesGenerated: counterexamples.summary.generated,
     patchesGenerated: patches.summary.generated,
     verificationStatus: verification.status,
+    verificationGate: verification.status === 'VERIFIED' ? 'VERIFIED' : 'NEEDS REVIEW',
     checksPassed: verification.checks.filter(c => c.status === 'passed').length,
     checksTotal: verification.checks.length,
     totalDurationMs,
   };
 
-  const json = buildJsonReport(summary, analysis, drift, invariants, counterexamples, patches, verification);
-  const markdown = buildMarkdownReport(summary, allFindings, invariants, counterexamples, patches, verification);
+  const json = buildJsonReport(summary, analysis, drift, invariants, counterexamples, patches, verification, findingsWithImpact);
+  const markdown = buildMarkdownReport(summary, findingsWithImpact, invariants, counterexamples, patches, verification);
 
   return {
     json,
@@ -68,16 +86,17 @@ export function generateReport({
   };
 }
 
-function buildJsonReport(summary, analysis, drift, invariants, counterexamples, patches, verification) {
+function buildJsonReport(summary, analysis, drift, invariants, counterexamples, patches, verification, findingsWithImpact) {
   return {
     schemaVersion: '1.0.0',
+    runId: summary.runId,
     summary,
     analysis: {
       repositoryStats: analysis.repositoryStats,
       entrypoints: analysis.entrypoints,
       routes: analysis.routes,
       environmentVariables: analysis.environmentVariables,
-      findings: analysis.findings,
+      findings: findingsWithImpact,
     },
     drift: {
       stats: drift.stats,
@@ -91,28 +110,31 @@ function buildJsonReport(summary, analysis, drift, invariants, counterexamples, 
       summary: counterexamples.summary,
       items: counterexamples.counterexamples.map(cx => ({
         ...cx,
-        testCode: cx.testCode, // Include full test code
+        testCode: cx.testCode,
       })),
     },
     patches: {
       summary: patches.summary,
       items: patches.patches.map(p => ({
         id: p.id,
-        findingId: p.findingId,
         targetFile: p.targetFile,
         strategy: p.strategy,
         description: p.description,
         diff: p.diff,
-        filesChanged: p.filesChanged,
         confidence: p.confidence,
       })),
     },
     verification: {
       status: verification.status,
+      gateDecision: summary.verificationGate,
       checks: verification.checks,
-      evidence: verification.evidence,
       durationMs: verification.durationMs,
     },
+    limitations: [
+      'Static Analysis Scope: Call-graph and blast radius analysis are computed using static ES/CJS module imports and Express route mount patterns. Dynamic runtime imports cannot be statically determined.',
+      'In-Memory RAM Operation: Patches and invariant verifications occur in browser memory and do not write to the physical filesystem unless diffs are exported.',
+      'Engine Boundaries: MSE enforces deterministic checks against supported invariants and does not claim mathematical completeness.'
+    ],
   };
 }
 
@@ -120,32 +142,32 @@ function buildMarkdownReport(summary, allFindings, invariants, counterexamples, 
   const lines = [];
 
   lines.push(`# MSE Analysis Report: ${summary.repositoryName}`);
-  lines.push('');
-  lines.push(`> Generated at ${summary.analyzedAt} by Morphogenetic Software Engine`);
+  lines.push(`**Run ID:** \`${summary.runId}\` | **Generated:** ${summary.analyzedAt}`);
+  lines.push(`**Repository Source:** ${summary.repositorySource} | **Verification Gate:** **${summary.verificationGate}**`);
   lines.push('');
 
-  // Summary table
+  // Executive Summary Table
   lines.push('## Summary');
   lines.push('');
   lines.push('| Metric | Value |');
   lines.push('|--------|-------|');
+  lines.push(`| Run ID | \`${summary.runId}\` |`);
   lines.push(`| Files analyzed | ${summary.filesAnalyzed} |`);
   lines.push(`| Source files | ${summary.sourceFilesAnalyzed} |`);
   lines.push(`| Total lines | ${summary.totalLines.toLocaleString()} |`);
   lines.push(`| Routes discovered | ${summary.routesDiscovered} |`);
-  lines.push(`| Dependencies discovered | ${summary.dependenciesDiscovered} |`);
-  lines.push(`| Environment variables | ${summary.environmentVariables} |`);
   lines.push(`| Total findings | ${summary.totalFindings} |`);
   lines.push(`| Critical findings | ${summary.criticalFindings} |`);
+  lines.push(`| Counterexamples | ${summary.counterexamplesGenerated} |`);
   lines.push(`| Patches generated | ${summary.patchesGenerated} |`);
-  lines.push(`| Verification | ${summary.verificationStatus} |`);
+  lines.push(`| Verification Gate | **${summary.verificationGate}** |`);
   lines.push(`| Checks passed | ${summary.checksPassed}/${summary.checksTotal} |`);
   lines.push(`| Analysis duration | ${summary.totalDurationMs}ms |`);
   lines.push('');
 
-  // Findings
+  // Findings & Impact Paths
   if (allFindings.length > 0) {
-    lines.push('## Findings');
+    lines.push('## Findings & Evidence Chains');
     lines.push('');
 
     for (const finding of allFindings) {
@@ -159,7 +181,7 @@ function buildMarkdownReport(summary, allFindings, invariants, counterexamples, 
       lines.push(finding.description);
       lines.push('');
 
-      if (finding.sourceEvidence.length > 0) {
+      if (finding.sourceEvidence?.length > 0) {
         lines.push('**Source Evidence:**');
         for (const ev of finding.sourceEvidence) {
           lines.push(`- \`${ev.file}${ev.line ? ':' + ev.line : ''}\` — ${ev.context || ev.excerpt}`);
@@ -167,11 +189,23 @@ function buildMarkdownReport(summary, allFindings, invariants, counterexamples, 
         lines.push('');
       }
 
-      if (finding.documentationEvidence.length > 0) {
+      if (finding.documentationEvidence?.length > 0) {
         lines.push('**Documentation Evidence:**');
         for (const ev of finding.documentationEvidence) {
           lines.push(`- \`${ev.file}${ev.line ? ':' + ev.line : ''}\` — ${ev.context || ev.excerpt}`);
         }
+        lines.push('');
+      }
+
+      // Blast Radius / Impact Path
+      if (finding.blastRadius?.isAvailable) {
+        lines.push('**Impact / Blast Radius:**');
+        if (finding.blastRadius.impactChain.length > 1) {
+          lines.push(`- *Propagation Path:* \`${finding.blastRadius.impactChain.join(' → ')}\``);
+        }
+        lines.push(`- *Connected Callers:* ${finding.blastRadius.dependents.length}`);
+        lines.push(`- *Downstream Dependencies:* ${finding.blastRadius.dependencies.length}`);
+        lines.push(`- *Affected Tests:* ${finding.blastRadius.affectedTests.join(', ') || 'None'}`);
         lines.push('');
       }
     }
@@ -190,7 +224,7 @@ function buildMarkdownReport(summary, allFindings, invariants, counterexamples, 
 
   // Patches
   if (patches.patches.length > 0) {
-    lines.push('## Patches');
+    lines.push('## Candidate Patches');
     lines.push('');
 
     for (const patch of patches.patches) {
@@ -207,10 +241,10 @@ function buildMarkdownReport(summary, allFindings, invariants, counterexamples, 
     }
   }
 
-  // Verification
-  lines.push('## Verification');
+  // Verification Gate Checks
+  lines.push('## Verification Gate Checks');
   lines.push('');
-  lines.push(`**Status:** ${verification.status}`);
+  lines.push(`**Decision:** **${summary.verificationGate}** (${summary.checksPassed}/${summary.checksTotal} passed)`);
   lines.push('');
   lines.push('| Check | Status | Detail |');
   lines.push('|-------|--------|--------|');
@@ -220,9 +254,16 @@ function buildMarkdownReport(summary, allFindings, invariants, counterexamples, 
   }
   lines.push('');
 
+  lines.push('## Limitations');
+  lines.push('');
+  lines.push('- **Static Analysis Scope**: Call-graph and blast radius analysis are computed using static ES/CJS module imports and Express route mount patterns. Dynamic runtime imports cannot be statically determined.');
+  lines.push('- **In-Memory RAM Operation**: Patches and invariant verifications occur in browser memory and do not write to the physical filesystem unless diffs are exported.');
+  lines.push('- **Engine Boundaries**: MSE enforces deterministic checks against supported invariants and does not claim mathematical completeness or zero-day infallibility.');
+  lines.push('');
+
   lines.push('---');
   lines.push('');
-  lines.push('*Verified against MSE checks. Analysis is based on static pattern matching and may not capture all runtime behaviors.*');
+  lines.push('*Verified against MSE checks. Analysis is based on static pattern matching and deterministic call-graph propagation.*');
 
   return lines.join('\n');
 }

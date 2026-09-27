@@ -16,6 +16,8 @@ export function normalize(p) {
   return result.join('/');
 }
 
+export const normalizePath = normalize;
+
 export function basename(p, ext) {
   const parts = normalize(p).split('/');
   let base = parts[parts.length - 1] || '';

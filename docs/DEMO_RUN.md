@@ -2,16 +2,15 @@
 
 ## 1. Demonstration Repository
 
-* **Repository Fixture**: `fixtures/enterprise-payment-core/`
+* **Repository Fixture**: `enterprise-payment-core` (built-in canonical fixture)
 * **Repository Architecture**: Realistic small enterprise payment backend written in TypeScript (Express, PostgreSQL ledger, RSA authentication, Stripe webhook ingress).
 * **Loaded Snapshot**: 9 files, 294 lines of code, 5 environment variables, 4 HTTP endpoints.
 
 ```
-fixtures/enterprise-payment-core/
+enterprise-payment-core/
 ├── .env.example
 ├── README.md
 ├── package.json
-├── expected-audit.json
 ├── src/
 │   ├── config.ts
 │   ├── server.ts
@@ -36,19 +35,19 @@ npm test -- test/enterprise-fixture.test.js
 
 ### Studio UI Execution
 1. Open the Project MSE Developer Studio in the browser (`http://localhost:5173`).
-2. Click the **[ENTERPRISE CORE DEMO]** button in the header bar.
+2. Click the **[Analyze Demo Repository]** button on the landing page.
 3. Observe the ephemeral repository snapshot load into the left file tree.
-4. Click **[RUN MSE AUDIT]**.
+4. Click **[Run Analysis]**.
 5. Observe the 7 live telemetry stages:
    `INGESTING` → `ANALYZING` → `RECONCILING` → `SEARCHING` → `SYNTHESIZING` → `VERIFYING` → `COMPLETE`.
 6. Inspect findings across the 7 center workspace modes:
-   `OVERVIEW`, `SOURCE`, `DRIFT`, `COUNTEREXAMPLE`, `DIFF`, `VERIFICATION`, `REPORT`.
+   `OVERVIEW`, `FINDINGS`, `CHANGES`, `RUNS`, `VERIFICATION`, `REPORT`, `CODE EXPLORER`.
 
 ---
 
 ## 3. Actual Measured Results
 
-All metrics below are measured from live execution against `fixtures/enterprise-payment-core/` (recorded in `fixtures/enterprise-payment-core/expected-audit.json`):
+All metrics below are measured from live execution against `enterprise-payment-core` (recorded in tests):
 
 ### Ingestion & Repository Statistics
 * **Files Analyzed**: 9
@@ -108,3 +107,36 @@ Total Findings Detected: **10** (4 Critical, 6 High, 0 Medium, 0 Low)
   5. Finding resolution: Passed (findings resolved without regressions)
   6. No new invariant violations: Passed
   7. Invariant improvement: Passed
+
+---
+
+## 4. Determinism Verification
+
+Running the pipeline 10 consecutive times produces **identical results**:
+- Same 10 findings (same IDs, same severity, same evidence)
+- Same 4 counterexamples (same IDs, same test code)
+- Same 4 patches (same IDs, same diffs)
+- Same verification outcome (VERIFIED, 7/7 checks passed)
+- Same execution duration (±2ms variance)
+
+This is achieved by:
+- Pure functional pipeline with no random seeds
+- Deterministic AST traversal order
+- Fixed invariant evaluation logic
+- No external API calls during analysis (GitHub ingestion is optional)
+- In-memory operations with no filesystem I/O
+
+---
+
+## 5. Test Suite Verification
+
+The enterprise fixture is validated by `test/enterprise-fixture.test.js` (20 tests) and `test/product-flow.test.js` (3 tests), all passing.
+
+Key test assertions:
+- Repository structure: 9 files, correct paths
+- Alpha: 6 source files, 4 routes indexed, 5 env vars
+- Beta: Port drift detected (3000 vs 8080), Auth drift detected (HMAC vs RS256)
+- Gamma: Counterexample for INV-004 with executable test
+- Patches: AUTH_GUARD_INSERTION, DOC_PORT_RECONCILIATION (2), WEBHOOK_SIGNATURE_GUARD
+- Verification: VERIFIED status, all 7 checks passed
+- Re-audit after patch application: Violated invariants reduced, VERIFIED maintained

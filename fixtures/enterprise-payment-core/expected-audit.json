@@ -1,14 +1,16 @@
 {
   "fixtureName": "enterprise-payment-core",
-  "recordedAt": "2026-09-27T06:01:32.131Z",
+  "recordedAt": "2026-09-27T08:17:39.164Z",
   "summary": {
+    "runId": "RUN #001",
     "repositoryName": "enterprise-payment-core",
-    "analyzedAt": "2026-09-27T06:01:32.083Z",
+    "repositorySource": "demo",
+    "analyzedAt": "2026-09-27T08:17:39.098Z",
     "filesAnalyzed": 9,
     "sourceFilesAnalyzed": 6,
     "totalLines": 294,
     "routesDiscovered": 4,
-    "dependenciesDiscovered": 0,
+    "dependenciesDiscovered": 10,
     "environmentVariables": 5,
     "entrypoints": 3,
     "totalFindings": 10,
@@ -22,9 +24,10 @@
     "counterexamplesGenerated": 4,
     "patchesGenerated": 4,
     "verificationStatus": "VERIFIED",
+    "verificationGate": "VERIFIED",
     "checksPassed": 7,
     "checksTotal": 7,
-    "totalDurationMs": 18
+    "totalDurationMs": 23
   },
   "findings": [
     {

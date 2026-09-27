@@ -124,6 +124,7 @@ export function runPipeline(snapshot, options = {}) {
       patches: patchResult,
       verification: verificationResult,
       totalDurationMs,
+      runId: options.runId || 'RUN #001',
     });
     emitEvent('REPORT', 'done', `Report generated: ${report.summary.totalFindings} findings, ${report.summary.patchesGenerated} patches.`);
   } catch (err) {
@@ -253,6 +254,7 @@ export async function runPipelineAsync(snapshot, options = {}) {
       patches: patchResult,
       verification: verificationResult,
       totalDurationMs,
+      runId: options.runId || 'RUN #001',
     });
     emitEvent('COMPLETE', 'done', `Audit complete in ${totalDurationMs}ms. Status: ${verificationResult.status}. Ready for review.`);
   } catch (err) {

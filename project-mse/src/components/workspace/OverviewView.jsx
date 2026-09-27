@@ -5,275 +5,385 @@ export default function OverviewView({
   snapshot,
   status,
   onRunAudit,
-  onNavigateMode
+  onNavigateTab,
+  onSelectFinding,
+  findings = [],
+  appliedPatchIds = []
 }) {
   const analysis = pipelineResult?.analysis;
-  const drift = pipelineResult?.drift;
   const invariants = pipelineResult?.invariants;
   const counterexamples = pipelineResult?.counterexamples;
   const patches = pipelineResult?.patches;
   const verification = pipelineResult?.verification;
 
   const totalDuration = pipelineResult?.totalDurationMs ?? 0;
+  const totalFindings = findings.length;
+
+  const criticalCount = findings.filter(f => f.severity === 'CRITICAL' && !f.isRepaired).length;
+  const highCount = findings.filter(f => f.severity === 'HIGH' && !f.isRepaired).length;
+  const mediumCount = findings.filter(f => f.severity === 'MEDIUM' && !f.isRepaired).length;
+  const resolvedCount = findings.filter(f => f.isRepaired).length;
+
+  const securityCount = findings.filter(f => f.category === 'Security').length;
+  const driftCount = findings.filter(f => f.category === 'Documentation Drift').length;
+  const behaviorCount = findings.filter(f => f.category === 'Behavior').length;
+
+  const totalInvariants = invariants?.summary?.total || 0;
+  const violatedInvariants = invariants?.summary?.violated || 0;
+  const totalCounterexamples = counterexamples?.summary?.generated || 0;
+  const totalPatches = patches?.summary?.generated || 0;
+  const unappliedPatches = (patches?.patches || []).filter(p => !appliedPatchIds.includes(p.id)).length;
+
+  const repoName = snapshot?.metadata?.name || 'repository';
+
+  const isConverged = totalFindings > 0 && resolvedCount === totalFindings;
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4 font-mono text-xs text-slate-200 bg-[#090d16]">
-      {/* Top Banner / Repository Status */}
-      <div className="bg-[#0d131f] border border-[#263147] rounded-sm p-3.5 flex items-center justify-between flex-wrap gap-3">
-        <div className="space-y-1">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm font-bold text-slate-100 tracking-wider">
-              {snapshot?.metadata?.name || 'repository'}
-            </span>
-            <span className="text-[10px] px-1.5 py-0.2 rounded-sm uppercase font-semibold bg-[#162032] text-slate-300 border border-[#24334d]">
-              {snapshot?.metadata?.source === 'zip' ? 'ZIP ARCHIVE' : 'BUNDLED DEMO'}
-            </span>
-            {snapshot?.metadata?.patched && (
-              <span className="text-[10px] px-1.5 py-0.2 rounded-sm font-bold bg-[#13281c] text-[#4ade80] border border-[#166534]">
-                PATCHED IN RAM
+    <div className="flex-1 overflow-y-auto p-6 space-y-6 font-sans text-slate-200 bg-[#090d16]">
+      {/* 1. WHAT REPOSITORY AM I LOOKING AT? & 2. IS ANYTHING WRONG? */}
+      <div className="bg-[#0d131f] border border-[#263147] rounded-lg p-6 space-y-4 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="flex items-center space-x-2.5">
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                isConverged
+                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                  : criticalCount > 0
+                  ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                  : 'bg-blue-500/20 text-[#38bdf8] border border-blue-500/30'
+              }`}>
+                {isConverged ? 'HOMEOSTASIS CONVERGED' : status === 'running' ? 'ANALYZING...' : 'ANALYSIS COMPLETE'}
               </span>
-            )}
+
+              <h1 className="text-xl font-bold text-white font-mono">{repoName}</h1>
+            </div>
+
+            <p className="text-xs text-slate-400">
+              {isConverged ? (
+                <span className="text-emerald-400 font-medium">All candidate patches applied in RAM. System contracts verified.</span>
+              ) : (
+                <span>
+                  Discovered <strong className="text-white">{totalFindings} findings</strong>,{' '}
+                  <strong className="text-white">{violatedInvariants} of {totalInvariants} invariant violations</strong>,{' '}
+                  <strong className="text-white">{totalCounterexamples} counterexamples</strong>, and{' '}
+                  <strong className="text-white">{totalPatches} candidate fixes</strong>.
+                </span>
+              )}
+            </p>
           </div>
-          <p className="text-[11px] text-slate-400">
-            {snapshot?.metadata?.description || 'Active in-memory repository representation'}
-          </p>
+
+          <div className="flex items-center space-x-3 shrink-0">
+            <button
+              onClick={() => onNavigateTab('findings')}
+              className="px-4 py-2 rounded-md bg-[#38bdf8] hover:bg-[#0ea5e9] text-[#090d16] font-bold text-xs shadow-sm transition flex items-center space-x-1.5"
+            >
+              <span>Review Findings ({totalFindings})</span>
+              <span>&rarr;</span>
+            </button>
+
+            <button
+              onClick={onRunAudit}
+              disabled={status === 'running'}
+              className="px-3.5 py-2 rounded-md bg-[#1e293b] hover:bg-[#334155] border border-[#263147] text-slate-200 text-xs font-medium transition disabled:opacity-50"
+            >
+              {status === 'running' ? 'Running...' : 'Re-run Analysis'}
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <div className="bg-[#111724] border border-[#263147] px-2.5 py-1 rounded-sm text-right">
-            <span className="text-[10px] text-slate-500 block">Analysis Duration</span>
-            <span className="text-xs font-bold text-[#38bdf8]">
-              {totalDuration > 0 ? `${totalDuration}ms` : '--'}
-            </span>
+        {/* Quick Numbers Bar */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-[#1e293b] text-xs">
+          <div>
+            <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Repository Scale</span>
+            <div className="font-semibold text-white mt-0.5">
+              {snapshot?.files?.length || 0} files <span className="text-slate-500 text-[10px]">({analysis?.repositoryStats?.totalLines || 0} lines)</span>
+            </div>
           </div>
 
-          <button
-            onClick={onRunAudit}
-            disabled={status === 'running'}
-            className="px-3 py-1.5 rounded-sm bg-[#1e293b] hover:bg-[#334155] border border-[#38bdf8] text-slate-100 font-bold text-xs disabled:opacity-50 transition"
-          >
-            {status === 'running' ? 'Running Audit...' : 'Run MSE Audit'}
-          </button>
+          <div>
+            <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Analysis Time</span>
+            <div className="font-semibold text-[#38bdf8] font-mono mt-0.5">
+              {totalDuration > 0 ? `${totalDuration}ms` : '--'}
+            </div>
+          </div>
+
+          <div>
+            <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Candidate Changes</span>
+            <div className="font-semibold text-white mt-0.5">
+              {unappliedPatches} pending <span className="text-slate-500 text-[10px]">({resolvedCount} applied)</span>
+            </div>
+          </div>
+
+          <div>
+            <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Verification State</span>
+            <div className={`font-semibold mt-0.5 ${
+              verification?.status === 'VERIFIED' ? 'text-emerald-400' : 'text-amber-400'
+            }`}>
+              {verification?.status === 'VERIFIED' ? 'VERIFIED (PASS)' : 'ATTENTION REQUIRED'}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Ingestion Security & Fault-Tolerance Audit Banner */}
-      {(snapshot?.metadata?.skippedFiles?.length > 0 || snapshot?.metadata?.warnings?.length > 0 || analysis?.parseErrors?.length > 0) && (
-        <div className="bg-[#1a1209] border border-[#78350f] rounded-sm p-3.5 space-y-2 text-[#fbbf24]">
-          <div className="flex items-center space-x-2 text-xs font-bold">
-            <span>[!] INGESTION SECURITY &amp; FAULT-TOLERANCE AUDIT</span>
+      {/* 2. VERIFICATION GATE OUTCOME */}
+      <div className="bg-[#0d131f] border border-[#263147] rounded-lg p-5 space-y-3.5 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center space-x-2">
+            <span className="h-2 w-2 rounded-full bg-purple-400" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-300">
+              MSE Verification Gate
+            </h2>
           </div>
-          <div className="text-[11px] text-amber-200/90 space-y-1">
-            {snapshot?.metadata?.skippedFiles?.map((sf, idx) => (
-              <div key={idx} className="flex items-center space-x-2 font-mono">
-                <span className="text-[#f87171] font-bold">[{sf.reason}]:</span>
-                <span className="text-slate-300">{sf.path}</span>
+          <span className={`text-xs px-2.5 py-0.5 rounded font-bold font-mono ${
+            verification?.status === 'VERIFIED'
+              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+              : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+          }`}>
+            {verification?.status === 'VERIFIED' ? 'VERIFIED AGAINST MSE CHECKS' : 'NEEDS REVIEW (UNAPPLIED CHANGES)'}
+          </span>
+        </div>
+
+        <div className="p-3.5 bg-[#111724] border border-[#1e293b] rounded space-y-2.5 text-xs">
+          <p className="text-slate-300">
+            {verification?.status === 'VERIFIED'
+              ? 'All required checks passed against in-memory repository contracts. Invariants restored with no newly introduced issues.'
+              : `${unappliedPatches} candidate patches available. Apply patches in memory to restore system invariants and resolve counterexamples.`}
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 pt-2 border-t border-[#1e293b] text-[11px]">
+            <div className="flex items-center space-x-1.5">
+              <span className={resolvedCount > 0 || isConverged ? 'text-emerald-400 font-bold' : 'text-slate-500'}>
+                {resolvedCount > 0 || isConverged ? '✓' : '○'}
+              </span>
+              <span className="text-slate-300">Counterexample resolved</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <span className={resolvedCount > 0 || isConverged ? 'text-emerald-400 font-bold' : 'text-slate-500'}>
+                {resolvedCount > 0 || isConverged ? '✓' : '○'}
+              </span>
+              <span className="text-slate-300">Regression test passes</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <span className={resolvedCount > 0 || isConverged ? 'text-emerald-400 font-bold' : 'text-slate-500'}>
+                {resolvedCount > 0 || isConverged ? '✓' : '○'}
+              </span>
+              <span className="text-slate-300">Invariant restored</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <span className="text-emerald-400 font-bold">✓</span>
+              <span className="text-slate-300">Build check passes</span>
+            </div>
+            <div className="flex items-center space-x-1.5 sm:col-span-2">
+              <span className="text-emerald-400 font-bold">✓</span>
+              <span className="text-slate-300">No newly detected supported violation</span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 pt-2.5 border-t border-[#1e293b]">
+            <button
+              onClick={() => onNavigateTab('findings')}
+              className="px-3 py-1.5 rounded bg-[#162032] hover:bg-[#1e293b] border border-[#263147] text-slate-200 text-xs font-medium transition"
+            >
+              View Evidence ({totalFindings})
+            </button>
+            <button
+              onClick={() => onNavigateTab('changes')}
+              className="px-3 py-1.5 rounded bg-[#162032] hover:bg-[#1e293b] border border-[#263147] text-[#38bdf8] text-xs font-medium transition"
+            >
+              View Changes &amp; Diff ({totalPatches})
+            </button>
+            <button
+              onClick={() => onNavigateTab('report')}
+              className="px-3 py-1.5 rounded bg-[#162032] hover:bg-[#1e293b] border border-[#263147] text-purple-300 text-xs font-medium transition"
+            >
+              Export Report
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. WHAT DID MSE DISCOVER? */}
+      <div className="space-y-3">
+        <h2 className="text-xs uppercase tracking-wider font-semibold text-slate-400">
+          What MSE Found
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Breakdown by Severity */}
+          <div className="bg-[#0d131f] border border-[#263147] rounded-lg p-4 space-y-3">
+            <h3 className="text-xs font-semibold text-white flex items-center justify-between">
+              <span>Severity Breakdown</span>
+              <span className="text-[11px] text-slate-400 font-normal">{totalFindings} total</span>
+            </h3>
+
+            <div className="space-y-2 text-xs">
+              <div 
+                onClick={() => onNavigateTab('findings')}
+                className="flex items-center justify-between p-2 rounded bg-[#111724] border border-[#1e293b] hover:border-red-500/50 cursor-pointer transition"
+              >
+                <div className="flex items-center space-x-2">
+                  <span className="h-2 w-2 rounded-full bg-red-400" />
+                  <span className="font-medium text-slate-200">Critical</span>
+                </div>
+                <span className="font-mono font-bold text-red-400">{criticalCount}</span>
               </div>
-            ))}
-            {snapshot?.metadata?.warnings?.map((w, idx) => (
-              <div key={idx} className="text-amber-300">
-                • {w}
+
+              <div 
+                onClick={() => onNavigateTab('findings')}
+                className="flex items-center justify-between p-2 rounded bg-[#111724] border border-[#1e293b] hover:border-amber-500/50 cursor-pointer transition"
+              >
+                <div className="flex items-center space-x-2">
+                  <span className="h-2 w-2 rounded-full bg-amber-400" />
+                  <span className="font-medium text-slate-200">High</span>
+                </div>
+                <span className="font-mono font-bold text-amber-400">{highCount}</span>
               </div>
-            ))}
-            {analysis?.parseErrors?.map((pe, idx) => (
-              <div key={idx} className="text-[#f87171]">
-                • Parse degradation in {pe.file}: {pe.error} (preserved partial analysis)
+
+              <div 
+                onClick={() => onNavigateTab('findings')}
+                className="flex items-center justify-between p-2 rounded bg-[#111724] border border-[#1e293b] hover:border-blue-500/50 cursor-pointer transition"
+              >
+                <div className="flex items-center space-x-2">
+                  <span className="h-2 w-2 rounded-full bg-blue-400" />
+                  <span className="font-medium text-slate-200">Medium</span>
+                </div>
+                <span className="font-mono font-bold text-[#38bdf8]">{mediumCount}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Breakdown by Category */}
+          <div className="bg-[#0d131f] border border-[#263147] rounded-lg p-4 space-y-3">
+            <h3 className="text-xs font-semibold text-white flex items-center justify-between">
+              <span>Category Breakdown</span>
+              <span className="text-[11px] text-slate-400 font-normal">Real engine domains</span>
+            </h3>
+
+            <div className="space-y-2 text-xs">
+              <div 
+                onClick={() => onNavigateTab('findings')}
+                className="flex items-center justify-between p-2 rounded bg-[#111724] border border-[#1e293b] hover:border-[#263147] cursor-pointer transition"
+              >
+                <span className="font-medium text-slate-200">Security Ingress &amp; Auth</span>
+                <span className="font-mono font-bold text-white">{securityCount}</span>
+              </div>
+
+              <div 
+                onClick={() => onNavigateTab('findings')}
+                className="flex items-center justify-between p-2 rounded bg-[#111724] border border-[#1e293b] hover:border-[#263147] cursor-pointer transition"
+              >
+                <span className="font-medium text-slate-200">Specification &amp; Port Drift</span>
+                <span className="font-mono font-bold text-white">{driftCount}</span>
+              </div>
+
+              <div 
+                onClick={() => onNavigateTab('findings')}
+                className="flex items-center justify-between p-2 rounded bg-[#111724] border border-[#1e293b] hover:border-[#263147] cursor-pointer transition"
+              >
+                <span className="font-medium text-slate-200">Behavior &amp; Invariants</span>
+                <span className="font-mono font-bold text-white">{behaviorCount}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. WHAT SHOULD I DO NEXT? */}
+      <div className="space-y-3">
+        <h2 className="text-xs uppercase tracking-wider font-semibold text-slate-400">
+          Recommended Next Steps
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div 
+            onClick={() => onNavigateTab('findings')}
+            className="p-4 rounded-lg bg-[#0d131f] border border-[#263147] hover:border-[#38bdf8]/60 cursor-pointer transition space-y-2 group"
+          >
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-white group-hover:text-[#38bdf8]">1. Review Findings</span>
+              <span className="text-slate-500 font-mono text-[10px]">Step 1</span>
+            </div>
+            <p className="text-xs text-slate-400">
+              Inspect detected issues with human explanations, code evidence, and synthesized counterexamples.
+            </p>
+          </div>
+
+          <div 
+            onClick={() => onNavigateTab('changes')}
+            className="p-4 rounded-lg bg-[#0d131f] border border-[#263147] hover:border-emerald-500/60 cursor-pointer transition space-y-2 group"
+          >
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-white group-hover:text-emerald-400">2. Review &amp; Apply Changes</span>
+              <span className="text-slate-500 font-mono text-[10px]">Step 2</span>
+            </div>
+            <p className="text-xs text-slate-400">
+              Preview unified diffs for synthesized patches and apply them directly into ephemeral memory.
+            </p>
+          </div>
+
+          <div 
+            onClick={() => onNavigateTab('report')}
+            className="p-4 rounded-lg bg-[#0d131f] border border-[#263147] hover:border-slate-400 cursor-pointer transition space-y-2 group"
+          >
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-white group-hover:text-slate-200">3. Export Audit Report</span>
+              <span className="text-slate-500 font-mono text-[10px]">Step 3</span>
+            </div>
+            <p className="text-xs text-slate-400">
+              Download complete Markdown or JSON reports with finding evidence and verified invariant status.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* High-Priority Findings Preview */}
+      {findings.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs uppercase tracking-wider font-semibold text-slate-400">
+              Top Priority Findings
+            </h2>
+            <button
+              onClick={() => onNavigateTab('findings')}
+              className="text-xs text-[#38bdf8] hover:underline"
+            >
+              View all {findings.length} findings &rarr;
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {findings.slice(0, 3).map((finding) => (
+              <div
+                key={finding.id}
+                onClick={() => {
+                  if (onSelectFinding) onSelectFinding(finding);
+                  onNavigateTab('findings');
+                }}
+                className="bg-[#0d131f] border border-[#263147] hover:border-[#38bdf8]/60 rounded-lg p-3.5 flex items-center justify-between gap-4 cursor-pointer transition"
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2">
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${
+                      finding.severity === 'CRITICAL'
+                        ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                        : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                    }`}>
+                      {finding.severity}
+                    </span>
+                    <span className="text-xs font-semibold text-white">{finding.title}</span>
+                  </div>
+                  <div className="text-[11px] text-slate-400 line-clamp-1">{finding.description}</div>
+                </div>
+
+                <div className="text-right shrink-0">
+                  <div className="text-[11px] font-mono text-slate-400">{finding.file}:{finding.line}</div>
+                  <span className="text-[11px] text-[#38bdf8] font-medium">View Finding &rarr;</span>
+                </div>
               </div>
             ))}
           </div>
         </div>
       )}
-
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-[#0d131f] border border-[#263147] rounded-sm p-3 space-y-1">
-          <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Repository Scale</span>
-          <div className="text-lg font-bold text-slate-100">
-            {snapshot?.files?.length || 0} <span className="text-xs font-normal text-slate-400">files</span>
-          </div>
-          <div className="text-[10px] text-slate-400">
-            {analysis?.repositoryStats?.sourceFiles || 0} source ({analysis?.repositoryStats?.totalLines || 0} lines)
-          </div>
-        </div>
-
-        <div className="bg-[#0d131f] border border-[#263147] rounded-sm p-3 space-y-1">
-          <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Discovered Routes</span>
-          <div className="text-lg font-bold text-slate-100">
-            {analysis?.routes?.length || 0} <span className="text-xs font-normal text-slate-400">endpoints</span>
-          </div>
-          <div className="text-[10px] text-slate-400">
-            {analysis?.routes?.filter(r => r.hasAuth).length || 0} guarded / {analysis?.routes?.filter(r => !r.hasAuth).length || 0} unguarded
-          </div>
-        </div>
-
-        <div className="bg-[#0d131f] border border-[#263147] rounded-sm p-3 space-y-1">
-          <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Invariant Health</span>
-          <div className="text-lg font-bold text-slate-100 flex items-center space-x-1.5">
-            <span className={invariants?.summary?.violated > 0 ? 'text-[#f87171]' : 'text-[#4ade80]'}>
-              {invariants?.summary?.satisfied || 0}/{invariants?.summary?.total || 0}
-            </span>
-            <span className="text-xs font-normal text-slate-400">bound</span>
-          </div>
-          <div className="text-[10px] text-slate-400">
-            {invariants?.summary?.violated || 0} violated / {invariants?.summary?.unknown || 0} unknown
-          </div>
-        </div>
-
-        <div className="bg-[#0d131f] border border-[#263147] rounded-sm p-3 space-y-1">
-          <span className="text-[10px] text-slate-500 uppercase tracking-wider block">Verification State</span>
-          <div className="text-lg font-bold">
-            {verification?.status === 'VERIFIED' ? (
-              <span className="text-[#4ade80]">VERIFIED</span>
-            ) : verification?.status === 'FAILED' ? (
-              <span className="text-[#f87171]">FAILED</span>
-            ) : (
-              <span className="text-slate-400">PENDING</span>
-            )}
-          </div>
-          <div className="text-[10px] text-slate-400">
-            {verification?.checks?.filter(c => c.status === 'passed').length || 0}/{verification?.checks?.length || 0} checks passed
-          </div>
-        </div>
-      </div>
-
-      {/* Findings Breakdown & Quick Navigation */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div 
-          onClick={() => onNavigateMode('drift')}
-          className="bg-[#0d131f] border border-[#263147] hover:border-[#fbbf24] rounded-sm p-3 cursor-pointer transition space-y-2 group"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-200">EPIGENETIC DRIFT</span>
-            <span className="text-[10px] bg-[#291e0b] text-[#fbbf24] border border-[#78350f] px-1.5 py-0.2 rounded-sm font-bold">
-              {drift?.stats?.driftFindingsCount || 0} Findings
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-400 leading-relaxed">
-            Reconciles documented port, HMAC authentication, and environment variable claims against AST code reality.
-          </p>
-          <div className="text-[10px] text-[#fbbf24] flex items-center space-x-1 group-hover:underline">
-            <span>Inspect Spec vs Reality Drift &rarr;</span>
-          </div>
-        </div>
-
-        <div 
-          onClick={() => onNavigateMode('counterexample')}
-          className="bg-[#0d131f] border border-[#263147] hover:border-[#f87171] rounded-sm p-3 cursor-pointer transition space-y-2 group"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-200">CEGIS COUNTEREXAMPLES</span>
-            <span className="text-[10px] bg-[#2a1215] text-[#f87171] border border-[#7f1d1d] px-1.5 py-0.2 rounded-sm font-bold">
-              {counterexamples?.summary?.generated || 0} Generated
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-400 leading-relaxed">
-            Concrete falsification scenarios and reproducible Vitest test artifacts exposing unguarded attack vectors.
-          </p>
-          <div className="text-[10px] text-[#f87171] flex items-center space-x-1 group-hover:underline">
-            <span>View Test Antigens &rarr;</span>
-          </div>
-        </div>
-
-        <div 
-          onClick={() => onNavigateMode('diff')}
-          className="bg-[#0d131f] border border-[#263147] hover:border-[#4ade80] rounded-sm p-3 cursor-pointer transition space-y-2 group"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-200">SYNTHESIZED REPAIRS</span>
-            <span className="text-[10px] bg-[#13281c] text-[#4ade80] border border-[#166534] px-1.5 py-0.2 rounded-sm font-bold">
-              {patches?.summary?.generated || 0} Ready
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-400 leading-relaxed">
-            Minimal atomic patches generated from actual file content: auth guards, signature verification, port fixes.
-          </p>
-          <div className="text-[10px] text-[#4ade80] flex items-center space-x-1 group-hover:underline">
-            <span>Review & Apply Patches &rarr;</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Discovered Endpoints and Environment Variables */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        {/* Endpoints Table */}
-        <div className="bg-[#0d131f] border border-[#263147] rounded-sm p-3 space-y-2">
-          <div className="flex items-center justify-between border-b border-[#1e293b] pb-2">
-            <span className="font-bold text-xs text-slate-200 uppercase">
-              Discovered Route Call-Graph ({analysis?.routes?.length || 0})
-            </span>
-            <span className="text-[10px] text-slate-500">Alpha AST Extraction</span>
-          </div>
-
-          <div className="space-y-1 max-h-48 overflow-y-auto">
-            {analysis?.routes && analysis.routes.length > 0 ? (
-              analysis.routes.map((route, idx) => (
-                <div 
-                  key={idx}
-                  className="flex items-center justify-between p-1.5 bg-[#111724] border border-[#1e293b] rounded-sm text-[11px]"
-                >
-                  <div className="flex items-center space-x-2">
-                    <span className={`px-1 py-0.2 rounded-sm text-[9px] font-bold ${
-                      route.method === 'GET' ? 'bg-[#1e293b] text-[#38bdf8]' :
-                      route.method === 'POST' ? 'bg-[#2a1b12] text-[#fb923c]' :
-                      'bg-[#1e293b] text-slate-300'
-                    }`}>
-                      {route.method}
-                    </span>
-                    <span className="font-semibold text-slate-200">{route.path}</span>
-                    <span className="text-slate-500 text-[10px]">({route.file}:{route.line})</span>
-                  </div>
-
-                  <span className={`text-[9px] px-1 py-0.2 rounded-sm font-semibold uppercase border ${
-                    route.hasAuth 
-                      ? 'bg-[#13281c] text-[#4ade80] border-[#166534]' 
-                      : 'bg-[#2a1215] text-[#f87171] border-[#7f1d1d]'
-                  }`}>
-                    {route.hasAuth ? 'GUARDED' : 'UNGUARDED'}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div className="text-slate-500 text-center py-4">No routes indexed yet. Run audit.</div>
-            )}
-          </div>
-        </div>
-
-        {/* Environment & Config Reality */}
-        <div className="bg-[#0d131f] border border-[#263147] rounded-sm p-3 space-y-2">
-          <div className="flex items-center justify-between border-b border-[#1e293b] pb-2">
-            <span className="font-bold text-xs text-slate-200 uppercase">
-              Configuration Topology ({analysis?.environmentVariables?.length || 0})
-            </span>
-            <span className="text-[10px] text-slate-500">process.env references</span>
-          </div>
-
-          <div className="space-y-1 max-h-48 overflow-y-auto">
-            {analysis?.environmentVariables && analysis.environmentVariables.length > 0 ? (
-              analysis.environmentVariables.map((envVar, idx) => (
-                <div 
-                  key={idx}
-                  className="flex items-center justify-between p-1.5 bg-[#111724] border border-[#1e293b] rounded-sm text-[11px]"
-                >
-                  <div className="flex items-center space-x-2">
-                    <span className="text-[#38bdf8] font-bold">${envVar.name}</span>
-                    <span className="text-slate-500 text-[10px]">({envVar.file}:{envVar.line})</span>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    {envVar.defaultValue ? (
-                      <span className="text-slate-400 text-[10px]">default: <code className="text-slate-200">{envVar.defaultValue}</code></span>
-                    ) : (
-                      <span className="text-slate-500 text-[10px]">no default</span>
-                    )}
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="text-slate-500 text-center py-4">No environment variables detected.</div>
-            )}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

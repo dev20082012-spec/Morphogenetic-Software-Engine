@@ -1,99 +1,105 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+
+/**
+ * Builds a nested folder tree from flat file list
+ */
+function buildTreeFromFiles(files = [], findings = [], patches = []) {
+  const fileBadgeMap = {};
+
+  for (const f of findings) {
+    const evidenceList = [...(f.sourceEvidence || []), ...(f.documentationEvidence || [])];
+    for (const ev of evidenceList) {
+      if (ev.file && !fileBadgeMap[ev.file]) {
+        fileBadgeMap[ev.file] = {
+          text: f.severity === 'CRITICAL' ? 'CRITICAL' : f.type === 'drift' ? 'DRIFT' : 'FINDING',
+          tone: f.severity === 'CRITICAL' ? 'danger' : 'warning',
+        };
+      }
+    }
+  }
+
+  for (const p of patches) {
+    if (p.targetFile && !fileBadgeMap[p.targetFile]) {
+      fileBadgeMap[p.targetFile] = {
+        text: 'PATCH READY',
+        tone: 'success',
+      };
+    }
+  }
+
+  const root = { name: '', type: 'folder', path: '', children: [] };
+
+  for (const file of files) {
+    const parts = file.path.split('/');
+    let current = root;
+
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      const isFile = i === parts.length - 1;
+      const partPath = parts.slice(0, i + 1).join('/');
+
+      if (isFile) {
+        current.children.push({
+          name: part,
+          path: file.path,
+          type: 'file',
+          language: file.language,
+          badge: fileBadgeMap[file.path]?.text,
+          badgeTone: fileBadgeMap[file.path]?.tone,
+        });
+      } else {
+        let folder = current.children.find(c => c.type === 'folder' && c.name === part);
+        if (!folder) {
+          folder = {
+            name: part,
+            path: partPath,
+            type: 'folder',
+            children: [],
+          };
+          current.children.push(folder);
+        }
+        current = folder;
+      }
+    }
+  }
+
+  function sortNodes(node) {
+    if (node.children) {
+      node.children.sort((a, b) => {
+        if (a.type !== b.type) {
+          return a.type === 'folder' ? -1 : 1;
+        }
+        return a.name.localeCompare(b.name);
+      });
+      for (const child of node.children) {
+        if (child.type === 'folder') sortNodes(child);
+      }
+    }
+  }
+  sortNodes(root);
+
+  return root.children;
+}
 
 export default function FileTree({ 
-  files, 
+  files = [], 
   activeFile, 
   onSelectFile, 
-  activeDiffFile, 
-  onSelectDiff 
+  patches = [],
+  findings = [],
+  onSelectDiff,
+  activeDiffFile 
 }) {
   const [search, setSearch] = useState('');
-  const [collapsedFolders, setCollapsedFolders] = useState({
-    'src/controllers': false,
-    'src/routes': false,
-    'src/db': false,
-    'src': false,
-    'contracts': false,
-    'specs': false,
-    'invariants': false,
-    'cegis-antigens': false
-  });
+  const [collapsedFolders, setCollapsedFolders] = useState({});
 
   const toggleFolder = (folderKey) => {
     setCollapsedFolders(prev => ({ ...prev, [folderKey]: !prev[folderKey] }));
   };
 
-  const treeStructure = [
-    {
-      name: 'src',
-      type: 'folder',
-      path: 'src',
-      children: [
-        {
-          name: 'routes',
-          type: 'folder',
-          path: 'src/routes',
-          children: [
-            files['src/routes/webhook.js'],
-            files['src/routes/users.js'],
-            files['src/routes/orders.js'],
-          ]
-        },
-        {
-          name: 'controllers',
-          type: 'folder',
-          path: 'src/controllers',
-          children: [
-            files['src/controllers/webhookController.js'],
-            files['src/controllers/usersController.js'],
-            files['src/controllers/ordersController.js'],
-          ]
-        },
-        {
-          name: 'db',
-          type: 'folder',
-          path: 'src/db',
-          children: [
-            files['src/db/pool.js'],
-          ]
-        }
-      ]
-    },
-    {
-      name: 'contracts',
-      type: 'folder',
-      path: 'contracts',
-      children: [
-        files['contracts/IdempotencyLease.ts'],
-        files['contracts/RaftConsensus.proto'],
-      ]
-    },
-    {
-      name: 'invariants',
-      type: 'folder',
-      path: 'invariants',
-      children: [
-        files['invariants/discovered_invariants.json'],
-      ]
-    },
-    {
-      name: 'specs',
-      type: 'folder',
-      path: 'specs',
-      children: [
-        files['specs/openapi.yaml'],
-        files['specs/README.md'],
-      ]
-    },
-    {
-      name: 'cegis-antigens',
-      type: 'folder',
-      path: 'cegis-antigens',
-      children: [
-        files['cegis-antigens/INV-001.antigen.test.js'],
-      ]
-    }
-  ];
+  const treeStructure = useMemo(() => {
+    return buildTreeFromFiles(files, findings, patches);
+  }, [files, findings, patches]);
 
   const renderFileItem = (file) => {
     if (!file) return null;
@@ -107,7 +113,7 @@ export default function FileTree({
       <button
         key={file.path}
         onClick={() => onSelectFile(file.path)}
-        className={`w-full text-left px-2 py-1 rounded-sm flex items-center justify-between text-xs font-mono border ${
+        className={`w-full text-left px-2 py-1 rounded-sm flex items-center justify-between text-xs font-mono border transition ${
           isActive 
             ? 'bg-[#1e293b] text-slate-100 font-semibold border-[#38bdf8]' 
             : 'text-slate-400 hover:text-slate-200 hover:bg-[#111724] border-transparent'
@@ -153,7 +159,7 @@ export default function FileTree({
         </button>
 
         {!isCollapsed && (
-          <div className="space-y-0.5" style={{ paddingLeft: `${indent + 10}px` }}>
+          <div className="space-y-0.5" style={{ paddingLeft: `${indent + 8}px` }}>
             {folder.children.map(child => {
               if (child.type === 'folder') {
                 return renderFolderItem(child, depth + 1);
@@ -172,7 +178,7 @@ export default function FileTree({
         <span className="text-[11px] font-mono font-bold text-slate-200 uppercase tracking-wider">
           CODEBASE EXPLORER
         </span>
-        <span className="text-[10px] font-mono text-slate-500">12 Files</span>
+        <span className="text-[10px] font-mono text-slate-500">{files.length} Files</span>
       </div>
 
       <div className="p-2 border-b border-[#263147] bg-[#090d16]">
@@ -186,52 +192,39 @@ export default function FileTree({
       </div>
 
       <div className="flex-1 overflow-y-auto p-1.5 space-y-0.5">
-        {treeStructure.map(item => renderFolderItem(item, 0))}
+        {treeStructure.map(item => {
+          if (item.type === 'folder') return renderFolderItem(item, 0);
+          return renderFileItem(item);
+        })}
       </div>
 
-      <div className="p-2 border-t border-[#263147] bg-[#090d16] space-y-1">
-        <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
-          <span className="font-semibold text-slate-300">
-            AUTO-PATCHES (3)
-          </span>
-          <span className="text-slate-500">CEGIS</span>
-        </div>
-        <div className="space-y-1">
-          <button
-            onClick={() => onSelectDiff('src/routes/webhook.js')}
-            className={`w-full text-left px-2 py-1 text-[10px] font-mono rounded-sm border flex items-center justify-between ${
-              activeDiffFile === 'src/routes/webhook.js'
-                ? 'bg-[#1e293b] border-[#38bdf8] text-slate-100 font-bold'
-                : 'bg-[#111724] border-[#263147] text-slate-300 hover:text-white'
-            }`}
-          >
-            <span>PR #142: Webhook HMAC</span>
+      {patches.length > 0 && (
+        <div className="p-2 border-t border-[#263147] bg-[#090d16] space-y-1">
+          <div className="flex items-center justify-between text-[10px] font-mono text-slate-400">
+            <span className="font-semibold text-slate-300">
+              REPAIR PATCHES ({patches.length})
+            </span>
             <span className="text-[#4ade80] font-bold">READY</span>
-          </button>
-          <button
-            onClick={() => onSelectDiff('src/db/pool.js')}
-            className={`w-full text-left px-2 py-1 text-[10px] font-mono rounded-sm border flex items-center justify-between ${
-              activeDiffFile === 'src/db/pool.js'
-                ? 'bg-[#1e293b] border-[#38bdf8] text-slate-100 font-bold'
-                : 'bg-[#111724] border-[#263147] text-slate-300 hover:text-white'
-            }`}
-          >
-            <span>PR #143: RAII Rollback</span>
-            <span className="text-[#4ade80] font-bold">READY</span>
-          </button>
-          <button
-            onClick={() => onSelectDiff('specs/README.md')}
-            className={`w-full text-left px-2 py-1 text-[10px] font-mono rounded-sm border flex items-center justify-between ${
-              activeDiffFile === 'specs/README.md'
-                ? 'bg-[#1e293b] border-[#38bdf8] text-slate-100 font-bold'
-                : 'bg-[#111724] border-[#263147] text-slate-300 hover:text-white'
-            }`}
-          >
-            <span>PR #144: Port Drift</span>
-            <span className="text-[#fbbf24] font-bold">RECONCILED</span>
-          </button>
+          </div>
+
+          <div className="space-y-1 max-h-32 overflow-y-auto">
+            {patches.map(patch => (
+              <button
+                key={patch.id}
+                onClick={() => onSelectDiff(patch.targetFile)}
+                className={`w-full text-left px-2 py-1 text-[10px] font-mono rounded-sm border flex items-center justify-between transition ${
+                  activeDiffFile === patch.targetFile
+                    ? 'bg-[#1e293b] border-[#38bdf8] text-slate-100 font-bold'
+                    : 'bg-[#111724] border-[#263147] text-slate-300 hover:text-white'
+                }`}
+              >
+                <span className="truncate pr-1">[{patch.id}] {patch.targetFile.split('/').pop()}</span>
+                <span className="text-[#4ade80] font-semibold shrink-0 uppercase text-[9px]">{patch.confidence}</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </aside>
   );
 }

@@ -1,0 +1,212 @@
+{
+  "fixtureName": "enterprise-payment-core",
+  "recordedAt": "2026-09-27T06:01:32.131Z",
+  "summary": {
+    "repositoryName": "enterprise-payment-core",
+    "analyzedAt": "2026-09-27T06:01:32.083Z",
+    "filesAnalyzed": 9,
+    "sourceFilesAnalyzed": 6,
+    "totalLines": 294,
+    "routesDiscovered": 4,
+    "dependenciesDiscovered": 0,
+    "environmentVariables": 5,
+    "entrypoints": 3,
+    "totalFindings": 10,
+    "criticalFindings": 4,
+    "highFindings": 6,
+    "mediumFindings": 0,
+    "lowFindings": 0,
+    "invariantsEvaluated": 6,
+    "invariantsViolated": 4,
+    "invariantsSatisfied": 2,
+    "counterexamplesGenerated": 4,
+    "patchesGenerated": 4,
+    "verificationStatus": "VERIFIED",
+    "checksPassed": 7,
+    "checksTotal": 7,
+    "totalDurationMs": 18
+  },
+  "findings": [
+    {
+      "id": "ALPHA-001",
+      "type": "security",
+      "severity": "CRITICAL",
+      "title": "Unguarded state-mutating route: POST /webhooks/stripe",
+      "description": "Route POST /webhooks/stripe in src/api/webhooks.ts performs state mutations via async operations but has no authentication middleware in its handler chain.",
+      "sourceFile": "src/api/webhooks.ts",
+      "sourceLine": 17
+    },
+    {
+      "id": "ALPHA-002",
+      "type": "security",
+      "severity": "HIGH",
+      "title": "Signature verification helper \"verifyWebhookSignature\" exists but is not used by webhooks.ts",
+      "description": "src/security/auth.ts exports \"verifyWebhookSignature\" but src/api/webhooks.ts does not import it. Webhook routes should verify HMAC signatures before processing payloads.",
+      "sourceFile": "src/security/auth.ts",
+      "sourceLine": 52
+    },
+    {
+      "id": "BETA-001",
+      "type": "drift",
+      "severity": "HIGH",
+      "title": "Port mismatch: documentation says 3000, code uses 8080",
+      "description": "README.md claims the service runs on port 3000, but the source code binds to port 8080. This will confuse developers and break deployment scripts.",
+      "sourceFile": "src/config.ts",
+      "sourceLine": 16
+    },
+    {
+      "id": "BETA-002",
+      "type": "configuration",
+      "severity": "HIGH",
+      "title": "Port mismatch: .env.example says 3000, code defaults to 8080",
+      "description": ".env.example sets PORT=3000, but the code defaults to port 8080. Developers using the example env will connect to the wrong port.",
+      "sourceFile": "src/config.ts",
+      "sourceLine": 16
+    },
+    {
+      "id": "BETA-003",
+      "type": "drift",
+      "severity": "HIGH",
+      "title": "Authentication scheme drift: Documentation specifies HMAC, code implements RS256/RSA",
+      "description": "README.md specifies HMAC authentication as the required authentication scheme, but src/security/auth.ts implements RS256/RSA public-key authentication.",
+      "sourceFile": "src/security/auth.ts",
+      "sourceLine": 8
+    },
+    {
+      "id": "BETA-004",
+      "type": "security",
+      "severity": "CRITICAL",
+      "title": "Documentation requires HMAC auth for webhooks, but code does not verify signatures",
+      "description": "README.md states that HMAC authentication is required for webhook endpoints, but src/api/webhooks.ts processes webhook payloads without any signature verification.",
+      "sourceFile": "src/api/webhooks.ts",
+      "sourceLine": 17
+    },
+    {
+      "id": "BETA-005",
+      "type": "drift",
+      "severity": "HIGH",
+      "title": "Authentication scheme drift: Documentation specifies HMAC, code implements RS256/RSA",
+      "description": "README.md specifies HMAC authentication as the required authentication scheme, but src/security/auth.ts implements RS256/RSA public-key authentication.",
+      "sourceFile": "src/security/auth.ts",
+      "sourceLine": 8
+    },
+    {
+      "id": "BETA-006",
+      "type": "security",
+      "severity": "CRITICAL",
+      "title": "Documentation requires HMAC auth for webhooks, but code does not verify signatures",
+      "description": "README.md states that HMAC authentication is required for webhook endpoints, but src/api/webhooks.ts processes webhook payloads without any signature verification.",
+      "sourceFile": "src/api/webhooks.ts",
+      "sourceLine": 17
+    },
+    {
+      "id": "BETA-007",
+      "type": "drift",
+      "severity": "HIGH",
+      "title": "Authentication scheme drift: Documentation specifies HMAC, code implements RS256/RSA",
+      "description": "README.md specifies HMAC authentication as the required authentication scheme, but src/security/auth.ts implements RS256/RSA public-key authentication.",
+      "sourceFile": "src/security/auth.ts",
+      "sourceLine": 8
+    },
+    {
+      "id": "BETA-008",
+      "type": "security",
+      "severity": "CRITICAL",
+      "title": "Documentation requires HMAC auth for webhooks, but code does not verify signatures",
+      "description": "README.md states that HMAC authentication is required for webhook endpoints, but src/api/webhooks.ts processes webhook payloads without any signature verification.",
+      "sourceFile": "src/api/webhooks.ts",
+      "sourceLine": 17
+    }
+  ],
+  "invariants": [
+    {
+      "id": "INV-001",
+      "name": "Route authentication guard",
+      "category": "security",
+      "status": "violated"
+    },
+    {
+      "id": "INV-002",
+      "name": "API port consistency",
+      "category": "configuration",
+      "status": "violated"
+    },
+    {
+      "id": "INV-003",
+      "name": "Transaction boundary completeness",
+      "category": "data-integrity",
+      "status": "satisfied"
+    },
+    {
+      "id": "INV-004",
+      "name": "Webhook signature verification",
+      "category": "security",
+      "status": "violated"
+    },
+    {
+      "id": "INV-005",
+      "name": "Environment variable documentation",
+      "category": "configuration",
+      "status": "satisfied"
+    },
+    {
+      "id": "INV-006",
+      "name": "Auth helper utilization",
+      "category": "security",
+      "status": "violated"
+    }
+  ],
+  "counterexamples": [
+    {
+      "id": "CX-001",
+      "invariantId": "INV-001",
+      "description": "A POST request to /webhooks/stripe without any authentication credentials reaches the handler and triggers state mutations. No auth middleware intercepts the unauthenticated request."
+    },
+    {
+      "id": "CX-002",
+      "invariantId": "INV-002",
+      "description": "Documentation and code declare different service ports. A developer following the README will attempt to connect to the wrong port."
+    },
+    {
+      "id": "CX-003",
+      "invariantId": "INV-004",
+      "description": "A webhook request with an invalid or missing HMAC-SHA256 signature reaches the processing handler. The payload is accepted and triggers database writes without any signature verification."
+    },
+    {
+      "id": "CX-004",
+      "invariantId": "INV-006",
+      "description": "An authentication/verification helper function exists in the codebase but is not imported or called by security-sensitive route handlers."
+    }
+  ],
+  "patches": [
+    {
+      "id": "PATCH-001",
+      "strategy": "AUTH_GUARD_INSERTION",
+      "targetFile": "src/api/webhooks.ts",
+      "confidence": "high"
+    },
+    {
+      "id": "PATCH-002",
+      "strategy": "DOC_PORT_RECONCILIATION",
+      "targetFile": "README.md",
+      "confidence": "high"
+    },
+    {
+      "id": "PATCH-003",
+      "strategy": "DOC_PORT_RECONCILIATION",
+      "targetFile": ".env.example",
+      "confidence": "high"
+    },
+    {
+      "id": "PATCH-004",
+      "strategy": "WEBHOOK_SIGNATURE_GUARD",
+      "targetFile": "src/api/webhooks.ts",
+      "confidence": "high"
+    }
+  ],
+  "verification": {
+    "status": "VERIFIED",
+    "checksPassed": 7,
+    "checksTotal": 7
+  }
+}

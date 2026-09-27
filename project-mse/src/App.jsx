@@ -1,220 +1,360 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import HeaderBar from './components/HeaderBar';
 import FileTree from './components/FileTree';
-import CodeEditor from './components/CodeEditor';
+import CenterWorkspace from './components/CenterWorkspace';
 import InvariantInspector from './components/InvariantInspector';
 import VerificationConsole from './components/VerificationConsole';
 
 import { 
-  REPOSITORY_FILES, 
-  UNIFIED_DIFFS, 
-  SYSTEM_INVARIANTS, 
-  AST_PIPELINE_PASSES 
-} from './data/mockFiles';
+  loadDemoRepository, 
+  loadEnterpriseFixture,
+  loadZipRepository, 
+  runPipeline,
+  runPipelineAsync,
+  applyPatches,
+  applySinglePatch
+} from './engine/index.js';
 
 export default function App() {
-  const [selectedPreset, setSelectedPreset] = useState('payment');
+  // Repository state
+  const [repositorySource, setRepositorySource] = useState('demo');
+  const [snapshot, setSnapshot] = useState(() => loadDemoRepository());
+  const [pipelineResult, setPipelineResult] = useState(() => runPipeline(loadDemoRepository()));
 
-  const [activeFilePath, setActiveFilePath] = useState('src/routes/webhook.js');
-  const [openTabs, setOpenTabs] = useState([
-    'src/routes/webhook.js',
-    'src/db/pool.js',
-    'specs/README.md',
-    'cegis-antigens/INV-001.antigen.test.js'
-  ]);
-  const [viewMode, setViewMode] = useState('code');
+  // Active navigation & view state
+  const [workspaceMode, setWorkspaceMode] = useState('overview');
+  const [activeFilePath, setActiveFilePath] = useState('server.js');
+  const [openTabs, setOpenTabs] = useState(['server.js', 'src/routes/webhook.js', 'specs/README.md']);
   const [highlightLine, setHighlightLine] = useState(null);
-  const [selectedAstNode, setSelectedAstNode] = useState(null);
+  const [selectedEvidence, setSelectedEvidence] = useState(null);
+  const [selectedInvariant, setSelectedInvariant] = useState(null);
+  const [targetDiffFile, setTargetDiffFile] = useState(null);
 
-  const [selectedInvariant, setSelectedInvariant] = useState(SYSTEM_INVARIANTS[0]);
+  // Patch application tracking
+  const [appliedPatchIds, setAppliedPatchIds] = useState([]);
 
+  // Telemetry & execution state
   const [status, setStatus] = useState('idle');
-  const [currentPass, setCurrentPass] = useState(1);
+  const [currentStage, setCurrentStage] = useState('COMPLETE');
+  const [durationMs, setDurationMs] = useState(18);
   const [consoleExpanded, setConsoleExpanded] = useState(true);
   const [logs, setLogs] = useState([
-    '[00:00.00] [ORCHESTRATOR] Initialized Project MSE IDE Workbench.',
-    '[00:00.12] [SECURITY_SHIELD] Ingesting repository topology in ephemeral RAM...',
-    '[00:00.45] [ALPHA:MORPHOLOGIST] AST parse initiated: 12 source modules indexed.',
-    '[00:01.02] [ALPHA:MORPHOLOGIST] Latent state manifold extracted: 4 invariants bound.',
-    '[00:01.48] [BETA:SYMBIOTE] Parsed specs/README.md and specs/openapi.yaml.',
-    '[00:01.95] [BETA:SYMBIOTE] Epigenetic Drift detected: Service port 3000 vs 8080 in AST.',
-    '[00:02.40] [GAMMA:IMMUNE] Synthesized counterexample test: cegis-antigens/INV-001.antigen.test.js [RED].',
-    '[00:02.88] [GAMMA:IMMUNE] Vulnerability isolated: unauthenticated webhook execution.',
-    '[00:03.20] [GAMMA:IMMUNE] Minimal atomic patch synthesized: PR #142 (AUTH_GUARD_INSERTION).'
+    '[00:00.00] [ORCHESTRATOR] Initialized Project MSE Developer Studio.',
+    '[00:00.05] [INGESTING] Ingested 12 files from demo repository into ephemeral RAM.',
+    '[00:00.12] [ANALYZING] Alpha AST Call-Graph analysis complete: 4 routes indexed.',
+    '[00:00.18] [RECONCILING] Beta Spec Drift reconciliation complete: 3 discrepancies found.',
+    '[00:00.22] [SEARCHING] Formal invariant evaluation: 4 violated, 2 satisfied.',
+    '[00:00.28] [SYNTHESIZING] CEGIS Counterexamples & atomic repair patches synthesized.',
+    '[00:00.35] [COMPLETE] Initial baseline loaded. Click "RUN MSE AUDIT" to re-verify.'
   ]);
 
-  const [energyScore, setEnergyScore] = useState(6.371);
+  const isRunningRef = useRef(false);
+  const runIdRef = useRef(0);
 
-  const intervalRef = useRef(null);
+  // Core Audit Runner using real async pipeline
+  const executeAudit = useCallback(async (targetSnapshot, customDelay = 70) => {
+    const currentRunId = ++runIdRef.current;
+    isRunningRef.current = true;
 
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
+    setStatus('running');
+    setCurrentStage('INGESTING');
+    setLogs([`[00:00.00] [ORCHESTRATOR] Initiating MSE Homeostasis Prover on "${targetSnapshot.metadata?.name || 'repository'}"...`]);
+
+    try {
+      const result = await runPipelineAsync(targetSnapshot, {
+        stageDelayMs: customDelay,
+        onEvent: (event) => {
+          if (runIdRef.current !== currentRunId) return; // Discard stale telemetry events
+          // Map phase to UI stage
+          if (['INGESTING', 'ANALYZING', 'RECONCILING', 'SEARCHING', 'SYNTHESIZING', 'VERIFYING', 'COMPLETE'].includes(event.phase)) {
+            setCurrentStage(event.phase);
+          }
+          const timeStr = new Date(event.timestamp).toLocaleTimeString();
+          const logLine = `[${timeStr}] [${event.phase}] ${event.detail || event.status}`;
+          setLogs(prev => [...prev, logLine]);
+        },
+      });
+
+      if (runIdRef.current !== currentRunId) return; // Stale execution discarded, preventing race conditions
+
+      setPipelineResult(result);
+      setDurationMs(result.totalDurationMs);
+      setCurrentStage('COMPLETE');
+      setStatus(result.verification?.status === 'VERIFIED' ? 'converged' : 'verified');
+      if (result.invariants?.invariants?.length > 0) {
+        setSelectedInvariant(result.invariants.invariants[0]);
+      }
+    } catch (err) {
+      if (runIdRef.current !== currentRunId) return;
+      setLogs(prev => [...prev, `[ERROR] Pipeline failure: ${err.message}`]);
+      setStatus('error');
+    } finally {
+      if (runIdRef.current === currentRunId) {
+        isRunningRef.current = false;
+      }
+    }
   }, []);
 
+  // Handler: Select Bundled Demo Repository 1 (payment-gateway)
+  const handleSelectDemo = () => {
+    const demoSnapshot = loadDemoRepository();
+    setRepositorySource('demo');
+    setSnapshot(demoSnapshot);
+    setAppliedPatchIds([]);
+    setActiveFilePath('server.js');
+    setOpenTabs(['server.js', 'src/routes/webhook.js', 'specs/README.md']);
+    setHighlightLine(null);
+    setSelectedEvidence(null);
+    setTargetDiffFile(null);
+    executeAudit(demoSnapshot);
+  };
+
+  // Handler: Select Canonical Enterprise Fixture (enterprise-payment-core)
+  const handleSelectEnterpriseDemo = () => {
+    const enterpriseSnapshot = loadEnterpriseFixture();
+    setRepositorySource('demo');
+    setSnapshot(enterpriseSnapshot);
+    setAppliedPatchIds([]);
+    setActiveFilePath('src/server.ts');
+    setOpenTabs(['src/server.ts', 'src/api/webhooks.ts', 'src/security/auth.ts', 'README.md']);
+    setHighlightLine(null);
+    setSelectedEvidence(null);
+    setTargetDiffFile(null);
+    executeAudit(enterpriseSnapshot);
+  };
+
+  // Handler: Upload ZIP Repository
+  const handleUploadZip = async (file) => {
+    try {
+      setStatus('running');
+      setCurrentStage('INGESTING');
+      setLogs(prev => [...prev, `[ZIP] Unpacking archive "${file.name}" in ephemeral RAM...`]);
+
+      const arrayBuffer = await file.arrayBuffer();
+      const zipSnapshot = await loadZipRepository(arrayBuffer, file.name.replace(/\.zip$/i, ''));
+
+      setRepositorySource('zip');
+      setSnapshot(zipSnapshot);
+      setAppliedPatchIds([]);
+
+      // Set initial active file to first available file or README
+      const firstFile = zipSnapshot.files.find(f => f.path.toLowerCase().includes('readme')) || zipSnapshot.files[0];
+      const initialPath = firstFile?.path || 'index.js';
+      setActiveFilePath(initialPath);
+      setOpenTabs([initialPath]);
+      setHighlightLine(null);
+      setSelectedEvidence(null);
+      setTargetDiffFile(null);
+
+      executeAudit(zipSnapshot);
+    } catch (err) {
+      setLogs(prev => [...prev, `[ZIP ERROR] Failed to load ZIP: ${err.message}`]);
+      setStatus('error');
+    }
+  };
+
+  // Handler: Manual Run Audit Button
+  const handleRunAudit = () => {
+    executeAudit(snapshot);
+  };
+
+  // Handler: Re-run Verification on current snapshot
+  const handleReRunVerification = () => {
+    executeAudit(snapshot, 40);
+  };
+
+  // Handler: Apply Single Patch to in-memory Snapshot
+  const handleApplyPatch = (patch) => {
+    if (!patch || appliedPatchIds.includes(patch.id)) return;
+
+    const newSnapshot = applySinglePatch(snapshot, patch);
+    setSnapshot(newSnapshot);
+    const updatedApplied = [...appliedPatchIds, patch.id];
+    setAppliedPatchIds(updatedApplied);
+
+    setLogs(prev => [
+      ...prev,
+      `[RAM PATCH] Applied ${patch.id} (${patch.strategy}) to in-memory file "${patch.targetFile}". Zero-retention RAM state updated.`
+    ]);
+
+    // Automatically re-run audit on updated in-memory snapshot to show invariant restoration
+    executeAudit(newSnapshot, 40);
+  };
+
+  // Handler: Apply All Patches
+  const handleApplyAllPatches = () => {
+    const patches = pipelineResult?.patches?.patches || [];
+    if (patches.length === 0) return;
+
+    const newSnapshot = applyPatches(snapshot, patches);
+    setSnapshot(newSnapshot);
+    setAppliedPatchIds(patches.map(p => p.id));
+
+    setLogs(prev => [
+      ...prev,
+      `[RAM PATCH] Applied all ${patches.length} synthesized atomic patches in RAM. Re-verifying repository invariants...`
+    ]);
+
+    executeAudit(newSnapshot, 40);
+  };
+
+  // Handler: Select File from Explorer or Tab
   const handleSelectFile = (filePath) => {
     setActiveFilePath(filePath);
     if (!openTabs.includes(filePath)) {
       setOpenTabs(prev => [...prev, filePath]);
     }
+    setWorkspaceMode('source');
     setHighlightLine(null);
-    setSelectedAstNode(null);
-    if (viewMode === 'diff' && !UNIFIED_DIFFS[filePath]) {
-      setViewMode('code');
-    }
+    setSelectedEvidence(null);
   };
 
+  // Handler: Select Tab
   const handleSelectTab = (tabPath) => {
     setActiveFilePath(tabPath);
-    setHighlightLine(null);
-    setSelectedAstNode(null);
+    setWorkspaceMode('source');
   };
 
+  // Handler: Close Tab
   const handleCloseTab = (tabPath) => {
     const updated = openTabs.filter(p => p !== tabPath);
     setOpenTabs(updated);
     if (activeFilePath === tabPath) {
-      setActiveFilePath(updated[0] || 'src/routes/webhook.js');
+      setActiveFilePath(updated[0] || snapshot?.files?.[0]?.path || '');
     }
   };
 
-  const handleSelectDiff = (filePath) => {
+  // Handler: Jump to File & Line (from Drift or Invariant)
+  const handleJumpToFile = (filePath, line, evidence) => {
+    if (!filePath) return;
     handleSelectFile(filePath);
-    setViewMode('diff');
+    setHighlightLine(line || null);
+    setSelectedEvidence(evidence || null);
+    setWorkspaceMode('source');
   };
 
-  const handleJumpToInvariant = (invariant) => {
+  // Handler: Jump to Invariant
+  const handleJumpToInvariant = (invariant, evidence) => {
     setSelectedInvariant(invariant);
-    handleSelectFile(invariant.targetFile);
-    setViewMode('code');
-    setHighlightLine(invariant.line);
-    setSelectedAstNode(invariant);
+    const targetFile = evidence?.file || invariant.evidence?.[0]?.file || activeFilePath;
+    const targetLine = evidence?.line || invariant.evidence?.[0]?.line || null;
+    handleJumpToFile(targetFile, targetLine, {
+      ...evidence,
+      title: `${invariant.id}: ${invariant.name}`,
+    });
   };
 
-  const handleRunVerification = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    setStatus('running');
-    setCurrentPass(1);
-    setConsoleExpanded(true);
-
-    const runLogs = [
-      '[00:00.05] [EXEC] Starting CEGIS Loop Verification across 12 AST modules...',
-      '[00:00.22] [PASS 1] Pre-Flight Sanitizer: 0 plaintext credentials found. Salted HMAC check OK.',
-      '[00:00.58] [PASS 2] Morphologist Call-Graph: Traversed 42 AST call nodes, extracted 3 invariants.',
-      '[00:00.95] [PASS 3] Symbiote Reconciler: Ingested OpenAPI spec, verified drift reconciliation.',
-      '[00:01.40] [PASS 4] Immune Core: Running counterexample test cegis-antigens/INV-001.antigen.test.js...',
-      '[00:01.85] [PASS 4] TEST FAILING (RED): Precondition violated on missing X-Hub-Signature-256.',
-      '[00:02.20] [PASS 5] Synthesizing AST repair patch with AUTH_GUARD_INSERTION strategy...',
-      '[00:02.65] [PASS 5] Generated unified diff patch: PR #142 (Confidence: 99.8%).',
-      '[00:03.10] [PASS 5] Re-executing counterexample test against patched AST...',
-      '[00:03.50] [PASS 5] TEST PASSING (GREEN): Homeostasis achieved. System Energy delta: -0.450 E(S).',
-      '[00:03.80] [ORCHESTRATOR] CEGIS Verification complete: 100% INVARIANTS BOUND, ZERO ENTROPY.'
-    ];
-
-    setLogs([]);
-    let logIdx = 0;
-
-    intervalRef.current = setInterval(() => {
-      if (logIdx < runLogs.length) {
-        const nextLog = runLogs[logIdx];
-        setLogs(prev => [...prev, nextLog]);
-        
-        if (logIdx === 1) setCurrentPass(1);
-        if (logIdx === 2) setCurrentPass(2);
-        if (logIdx === 3) setCurrentPass(3);
-        if (logIdx === 5) setCurrentPass(4);
-        if (logIdx === 7) setCurrentPass(5);
-
-        logIdx++;
-      } else {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-        setStatus('converged');
-        setEnergyScore(5.921);
-      }
-    }, 350);
-  };
-
-  const handleStepPass = () => {
-    if (currentPass < AST_PIPELINE_PASSES.length) {
-      const next = currentPass + 1;
-      setCurrentPass(next);
-      const passInfo = AST_PIPELINE_PASSES[next - 1];
-      setLogs(prev => [
-        ...prev,
-        `[STEP] Executed Pass ${passInfo.pass}: ${passInfo.name} (${passInfo.duration}, ${passInfo.tokensAllocated})`
-      ]);
-      if (next === AST_PIPELINE_PASSES.length) {
-        setStatus('converged');
-        setEnergyScore(5.921);
-      }
+  // Handler: Open Diff Mode for target file
+  const handleOpenDiff = (filePath) => {
+    if (filePath) {
+      setTargetDiffFile(filePath);
     }
+    setWorkspaceMode('diff');
   };
 
+  // Reset Workbench to initial demo state
   const handleReset = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    setStatus('idle');
-    setCurrentPass(1);
-    setEnergyScore(6.371);
-    setHighlightLine(null);
-    setSelectedAstNode(null);
-    setLogs([
-      '[00:00.00] [ORCHESTRATOR] Workbench reset to baseline AST state.'
-    ]);
+    handleSelectDemo();
   };
 
-  const currentFile = REPOSITORY_FILES[activeFilePath] || REPOSITORY_FILES['src/routes/webhook.js'];
-  const currentDiff = UNIFIED_DIFFS[activeFilePath] || null;
+  // Active file object
+  const currentFile = snapshot?.files?.find(f => f.path === activeFilePath) 
+    || snapshot?.files?.[0] 
+    || null;
+
+  // Check if current file has an associated patch
+  const hasPatchForCurrentFile = Boolean(
+    pipelineResult?.patches?.patches?.some(p => p.targetFile === activeFilePath)
+  );
+
+  const findings = [
+    ...(pipelineResult?.analysis?.findings || []),
+    ...(pipelineResult?.drift?.findings || [])
+  ];
+
+  const patches = pipelineResult?.patches?.patches || [];
 
   return (
     <div className="h-screen max-h-screen w-screen bg-[#090d16] text-slate-100 flex flex-col font-sans overflow-hidden">
-      <HeaderBar 
-        selectedPreset={selectedPreset}
-        onSelectPreset={setSelectedPreset}
-        energyScore={energyScore}
+      {/* Top Header Bar */}
+      <HeaderBar
+        repositorySource={repositorySource}
+        repositoryName={snapshot?.metadata?.name}
+        onSelectDemo={handleSelectDemo}
+        onSelectEnterpriseDemo={handleSelectEnterpriseDemo}
+        onUploadZip={handleUploadZip}
         status={status}
+        onRunAudit={handleRunAudit}
+        durationMs={durationMs}
+        findingsCount={findings.length}
+        hasPatches={patches.length > 0}
+        allPatchesApplied={patches.length > 0 && patches.every(p => appliedPatchIds.includes(p.id))}
+        onApplyAllPatches={handleApplyAllPatches}
       />
 
+      {/* Main Workbench Body: Explorer (Left) | Center Workspace (Center) | Invariants Rail (Right) */}
       <div className="flex-1 flex overflow-hidden">
-        <FileTree 
-          files={REPOSITORY_FILES}
+        {/* Left Pane: Repository Explorer */}
+        <FileTree
+          files={snapshot?.files || []}
           activeFile={activeFilePath}
           onSelectFile={handleSelectFile}
-          activeDiffFile={viewMode === 'diff' ? activeFilePath : null}
-          onSelectDiff={handleSelectDiff}
+          patches={patches}
+          findings={findings}
+          onSelectDiff={handleOpenDiff}
+          activeDiffFile={targetDiffFile}
         />
 
-        <CodeEditor 
+        {/* Center Pane: Developer Workspace with 7 Modes */}
+        <CenterWorkspace
+          mode={workspaceMode}
+          onModeChange={setWorkspaceMode}
           file={currentFile}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          diffData={currentDiff}
           highlightLine={highlightLine}
-          selectedAstNode={selectedAstNode}
+          selectedEvidence={selectedEvidence}
           openTabs={openTabs}
           onSelectTab={handleSelectTab}
           onCloseTab={handleCloseTab}
+          hasPatch={hasPatchForCurrentFile}
+          onOpenDiff={handleOpenDiff}
+          pipelineResult={pipelineResult}
+          snapshot={snapshot}
+          status={status}
+          onRunAudit={handleRunAudit}
+          appliedPatchIds={appliedPatchIds}
+          onApplyPatch={handleApplyPatch}
+          onApplyAllPatches={handleApplyAllPatches}
+          onReRunVerification={handleReRunVerification}
+          onJumpToFile={handleJumpToFile}
+          targetDiffFile={targetDiffFile}
         />
 
-        <InvariantInspector 
-          invariants={SYSTEM_INVARIANTS}
+        {/* Right Pane: System Invariants & Risk Assessment Rail */}
+        <InvariantInspector
+          invariants={pipelineResult?.invariants?.invariants || []}
           selectedInvariant={selectedInvariant}
           onJumpToInvariant={handleJumpToInvariant}
-          onOpenDiff={handleSelectDiff}
+          onOpenDiff={handleOpenDiff}
+          onOpenCounterexample={() => setWorkspaceMode('counterexample')}
+          patches={patches}
+          findings={findings}
+          reportJson={pipelineResult?.report?.json}
+          repoName={snapshot?.metadata?.name || 'repository'}
         />
       </div>
 
-      <VerificationConsole 
+      {/* Bottom Pane: Verification & Telemetry Console Drawer */}
+      <VerificationConsole
         status={status}
-        currentPass={currentPass}
-        passes={AST_PIPELINE_PASSES}
+        currentStage={currentStage}
         logs={logs}
-        onRunVerification={handleRunVerification}
-        onStepPass={handleStepPass}
+        onRunAudit={handleRunAudit}
+        onReRunVerification={handleReRunVerification}
         onReset={handleReset}
         isExpanded={consoleExpanded}
         onToggleExpand={() => setConsoleExpanded(!consoleExpanded)}
+        durationMs={durationMs}
+        filesCount={snapshot?.files?.length || 0}
       />
     </div>
   );
